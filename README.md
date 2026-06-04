@@ -1,162 +1,174 @@
-event-processor/
-├── services/
-│   ├── api-gateway/
-│   │   ├── src/
-│   │   │   ├── routes/
-│   │   │   ├── controllers/
-│   │   │   ├── middleware/
-│   │   │   └── server.js
-│   │   └── package.json
-│   │
-│   ├── transaction-producer/
-│   │   ├── src/
-│   │   │   ├── producers/
-│   │   │   └── index.js
-│   │   └── package.json
-│   │
-│   ├── event-processor/
-│   │   ├── src/
-│   │   │   ├── consumers/
-│   │   │   ├── processors/
-│   │   │   ├── services/
-│   │   │   └── index.js
-│   │   └── package.json
-│   │
-│   ├── notification-service/
-│   │   ├── src/
-│   │   │   ├── websocket/
-│   │   │   ├── sse/
-│   │   │   └── index.js
-│   │   └── package.json
-│
-├── frontend/
-│   ├── src/
-│   └── package.json
-│
-├── shared/
-│   ├── events/
-│   ├── constants/
-│   └── utils/
-│
-├── infra/
-│   ├── docker-compose.yml
-│   ├── kafka/
-│   ├── redis/
-│   ├── mongo/
-│   └── k8s/
-│
-├── docs/
-│   ├── architecture.md
-│   ├── event-flow.md
-│   └── api.md
-│
-├── README.md
-└── .env.example
+# Real-Time Event Processing Platform
 
+A TypeScript microservice project that simulates an enterprise banking transaction flow using Kafka, MongoDB, Redis, Express, SSE, Docker, and a Next.js frontend.
 
-User/API triggers transaction
-        ↓
-API Gateway receives request
-        ↓
-Transaction Producer sends event to Kafka
-        ↓
-Event Processor consumes Kafka event
-        ↓
-Processor validates + enriches event
-        ↓
-MongoDB stores transaction history
-        ↓
-Redis updates latest account/cache state
-        ↓
-Notification Service pushes live update
-        ↓
-Frontend updates instantly
+## Architecture
 
+```txt
+Frontend
+  -> API Gateway
+  -> Kafka topic: transaction.created
+  -> Event Processor
+  -> MongoDB transaction write
+  -> Redis balance update
+  -> Kafka topic: notification.created
+  -> Notification Service
+  -> SSE live update
+  -> Frontend
+```
+
+## Services
+
+```txt
+services/api-gateway
+```
+
+Receives transaction requests, validates payloads, and publishes `transaction.created` events to Kafka.
+
+```txt
+services/event-processor
+```
+
+Consumes `transaction.created`, saves completed transactions in MongoDB, updates Redis account balances, and publishes `notification.created`.
+
+```txt
+services/notification-service
+```
+
+Consumes `notification.created` and pushes real-time updates to connected frontend clients through Server-Sent Events.
+
+```txt
+frontend
+```
+
+Next.js dashboard for creating transactions, connecting to SSE, and viewing live status updates.
+
+## Event Flow
+
+```txt
+POST /v1/api/transactions
+  -> transaction.created
+  -> process transaction
+  -> save transaction
+  -> update account:{accountId}:balance
+  -> notification.created
+  -> GET /v1/api/events/:userId
+```
+
+## Kafka Topics
+
+```txt
 transaction.created
-transaction.processed
+notification.created
+```
+
+Future topics:
+
+```txt
 transaction.failed
 fraud.detected
 account.balance.updated
-notification.created
+```
 
-users
-accounts
-transactions
-event_logs
-fraud_alerts
-notifications
+## Local Ports
 
-account:{accountId}:balance
-user:{userId}:recent-transactions
-fraud:{userId}:risk-score
-live:notifications:{userId}
+```txt
+API Gateway:          http://localhost:3000
+Notification Service: http://localhost:3002
+Frontend:             http://localhost:3003
+Kafka:                localhost:9092
+MongoDB:              localhost:27017
+Redis:                localhost:6379
+```
 
+## Run Locally
 
-Node.js services
-Express API
-MongoDB connection
-Redis connection
-Kafka producer/consumer
-Docker Compose
+Start infrastructure first:
 
-POST /transactions
-→ Kafka event
-→ Consumer receives event
-→ Save to MongoDB
+```bash
+docker compose up -d
+```
 
-transaction validation
-balance update logic
-failed transaction handling
-event status tracking
-retry logic
-dead-letter topic
+Run API Gateway:
 
-PENDING
-PROCESSING
-COMPLETED
-FAILED
-FLAGGED
+```bash
+cd services/api-gateway
+npm install
+npm run dev
+```
 
-Transaction completed
-Balance updated
-Fraud alert detected
-Notification generated
+Run Event Processor:
 
-idempotency keys
-request correlation IDs
-centralized logging
-rate limiting
-schema validation
-Kafka retry topics
-dead-letter queue
-health checks
-metrics endpoint
+```bash
+cd services/event-processor
+npm install
+npm run dev
+```
 
-api-gateway
-transaction-producer
-event-processor
-notification-service
-mongo
-redis
-kafka
-zookeeper
-frontend
+Run Notification Service:
 
-Deployments
-Services
-ConfigMaps
-Secrets
-Ingress
-HorizontalPodAutoscaler
+```bash
+cd services/notification-service
+npm install
+npm run dev
+```
 
-Best MVP Version
+Run Frontend:
 
-If you want to finish this strongly, build this MVP first:
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-1. Create transaction from API
-2. Publish transaction.created event to Kafka
-3. Consume event in processor
-4. Save transaction to MongoDB
-5. Update balance in Redis
-6. Push live status to frontend using SSE
-7. Show transaction timeline in UI
+Open:
+
+```txt
+http://localhost:3003
+```
+
+## API Example
+
+```http
+POST http://localhost:3000/v1/api/transactions
+Content-Type: application/json
+```
+
+```json
+{
+  "userId": "user-101",
+  "accountId": "acc-5001",
+  "type": "CREDIT",
+  "amount": 2500
+}
+```
+
+## SSE Endpoint
+
+```txt
+GET http://localhost:3002/v1/api/events/user-101
+```
+
+## Quality Gates
+
+Each backend service supports:
+
+```bash
+npm run lint
+npm run typecheck
+npm test
+npm run build
+npm run validate
+```
+
+Frontend supports:
+
+```bash
+npm run typecheck
+npm run build
+npm run validate
+```
+
+## Resume Summary
+
+Built a real-time event-driven banking transaction platform using Node.js, TypeScript, Kafka, Redis, MongoDB, Docker, SSE, Express, and Next.js. The system demonstrates asynchronous microservice communication, event processing, database persistence, cache updates, and live frontend notifications.
