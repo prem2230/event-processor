@@ -7,8 +7,10 @@
     "build": "next build",
     "start": "next start -p 3003",
     "lint": "next lint",
+    "test": "jest",
+    "test:watch": "jest --watch",
     "typecheck": "tsc --noEmit",
-    "validate": "npm run typecheck && npm run build"
+    "validate": "npm run typecheck && npm test && npm run build"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",
@@ -17,11 +19,17 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.1.0",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/jest": "^30.0.0",
     "@types/node": "^22.10.7",
     "@types/react": "^19.0.4",
     "@types/react-dom": "^19.0.2",
     "eslint": "^9.18.0",
     "eslint-config-next": "^15.1.4",
+    "jest": "^30.0.0",
+    "jest-environment-jsdom": "^30.0.0",
     "typescript": "^5.7.3"
   }
 }
