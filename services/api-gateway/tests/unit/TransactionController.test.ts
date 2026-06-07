@@ -1,9 +1,7 @@
 import { Request, Response } from "express";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import {
-  createTransaction,
-  healthCheck,
-} from "../../src/controllers/TransactionController";
+import HealthController from "../../src/controllers/HealthController";
+import TransactionController from "../../src/controllers/TransactionController";
 import { producer } from "../../src/kafka/KafkaService";
 
 jest.mock("../../src/kafka/KafkaService", () => ({
@@ -30,7 +28,7 @@ describe("TransactionController", () => {
     const req = {} as Request;
     const res = mockResponse();
 
-    healthCheck(req, res);
+    HealthController.healthCheck(req, res);
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
@@ -51,7 +49,7 @@ describe("TransactionController", () => {
 
     const res = mockResponse();
 
-    await createTransaction(req, res);
+    await TransactionController.createTransaction(req, res);
 
     expect(producer.send).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -71,7 +69,7 @@ describe("TransactionController", () => {
 
     const res = mockResponse();
 
-    await createTransaction(req, res);
+    await TransactionController.createTransaction(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(producer.send).not.toHaveBeenCalled();
@@ -89,7 +87,7 @@ describe("TransactionController", () => {
 
     const res = mockResponse();
 
-    await createTransaction(req, res);
+    await TransactionController.createTransaction(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(producer.send).not.toHaveBeenCalled();
@@ -107,7 +105,7 @@ describe("TransactionController", () => {
 
     const res = mockResponse();
 
-    await createTransaction(req, res);
+    await TransactionController.createTransaction(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(producer.send).not.toHaveBeenCalled();
