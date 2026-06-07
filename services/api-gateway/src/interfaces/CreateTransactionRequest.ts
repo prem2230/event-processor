@@ -2,7 +2,7 @@ import { TransactionType } from "../types";
 
 export interface TransactionCreatedEvent {
     eventId: string;
-    eventType: "transaction.created";
+    eventType: string;
     occurredAt: string;
     data: {
         transactionId: string;

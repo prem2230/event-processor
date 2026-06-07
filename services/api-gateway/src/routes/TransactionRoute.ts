@@ -1,12 +1,10 @@
 import express from "express";
-import {
-  createTransaction,
-  healthCheck,
-} from "../controllers/TransactionController";
+import HealthController from "../controllers/HealthController";
+import TransactionController from "../controllers/TransactionController";
 
 const router = express.Router();
 
-router.get("/health", healthCheck);
-router.post("/transactions", createTransaction);
+router.get("/health", HealthController.healthCheck);
+router.post("/transactions", TransactionController.createTransaction);
 
 export default router;
