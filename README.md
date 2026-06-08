@@ -172,3 +172,4 @@ npm run validate
 ## Resume Summary
 
 Built a real-time event-driven banking transaction platform using Node.js, TypeScript, Kafka, Redis, MongoDB, Docker, SSE, Express, and Next.js. The system demonstrates asynchronous microservice communication, event processing, database persistence, cache updates, and live frontend notifications.
+
