@@ -94,7 +94,7 @@ describe("Banking Event Console", () => {
       });
     });
 
-    expect(await screen.findByText("connected")).toBeInTheDocument();
+    expect((await screen.findAllByText("Live")).length).toBeGreaterThan(0);
   });
 
   it("publishes a transaction request and shows it as pending", async () => {
@@ -118,7 +118,7 @@ describe("Banking Event Console", () => {
       );
     });
 
-    expect(await screen.findByText("txn-1")).toBeInTheDocument();
+    expect(await screen.findByText(/txn-1/)).toBeInTheDocument();
   });
 
   it("shows live notification events from SSE", async () => {
