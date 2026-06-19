@@ -23,7 +23,10 @@ class TransactionController {
         );
       return res.status(result.statusCode).json(result.body);
     } catch (error) {
-      return TransactionInitiatorService.handleCreateTransactionError(error, res);
+      return TransactionInitiatorService.handleCreateTransactionError(
+        error,
+        res,
+      );
     }
   }
 }

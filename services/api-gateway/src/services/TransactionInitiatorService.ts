@@ -10,7 +10,8 @@ import envConfig from "../config/env";
 
 class TransactionInitiatorService {
   private static readonly logger = Logger;
-  private static readonly transactionCreatedTopic = envConfig.kafkaTransactionCreatedTopic;
+  private static readonly transactionCreatedTopic =
+    envConfig.kafkaTransactionCreatedTopic;
   private static readonly buildTransactionEvents = BuildTransactionEvents;
 
   public static getCreateTransactionRequest(
@@ -23,9 +24,12 @@ class TransactionInitiatorService {
     error: unknown,
     res: Response,
   ): Response {
-    TransactionInitiatorService.logger.error("Failed to publish transaction event", {
-      error: error instanceof Error ? error.message : String(error),
-    });
+    TransactionInitiatorService.logger.error(
+      "Failed to publish transaction event",
+      {
+        error: error instanceof Error ? error.message : String(error),
+      },
+    );
 
     return res.status(500).json({
       message: "Failed to publish transaction event",
@@ -38,12 +42,15 @@ class TransactionInitiatorService {
     const validationError =
       TransactionInitiatorService.validateCreateTransactionRequest(data);
     if (validationError) {
-      TransactionInitiatorService.logger.warn("Create transaction request validation failed", {
-        userId: data.userId,
-        accountId: data.accountId,
-        type: data.type,
-        validationError,
-      });
+      TransactionInitiatorService.logger.warn(
+        "Create transaction request validation failed",
+        {
+          userId: data.userId,
+          accountId: data.accountId,
+          type: data.type,
+          validationError,
+        },
+      );
       return {
         statusCode: 400,
         body: {
@@ -96,11 +103,14 @@ class TransactionInitiatorService {
     const { userId, accountId, type, amount } = data;
 
     if (!userId || !accountId || !type || typeof amount !== "number") {
-      TransactionInitiatorService.logger.warn("Invalid create transaction request", {
-        userId,
-        accountId,
-        type,
-      });
+      TransactionInitiatorService.logger.warn(
+        "Invalid create transaction request",
+        {
+          userId,
+          accountId,
+          type,
+        },
+      );
       return "userId, accountId, type, and amount are required";
     }
 
