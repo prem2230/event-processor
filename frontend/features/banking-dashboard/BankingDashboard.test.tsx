@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { act } from "react";
-import Home from "./page";
+import { BankingDashboard } from "./BankingDashboard";
 
 type EventHandler = (event: MessageEvent<string>) => void;
 
@@ -58,7 +58,7 @@ const notificationEvent = {
   },
 };
 
-describe("Banking Event Console", () => {
+describe("BankingDashboard", () => {
   beforeEach(() => {
     MockEventSource.instances = [];
     global.EventSource = MockEventSource as unknown as typeof EventSource;
@@ -69,17 +69,21 @@ describe("Banking Event Console", () => {
   });
 
   it("renders dashboard controls and metrics", () => {
-    render(<Home />);
+    render(<BankingDashboard />);
 
-    expect(screen.getByRole("heading", { name: "Banking Event Console" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Banking Event Console" })
+    ).toBeInTheDocument();
     expect(screen.getByLabelText("User ID")).toHaveValue("user-101");
     expect(screen.getByLabelText("Account ID")).toHaveValue("acc-5001");
-    expect(screen.getByRole("button", { name: "Publish Event" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Publish Event" })
+    ).toBeInTheDocument();
   });
 
   it("connects to notification SSE for the selected user", async () => {
     const user = userEvent.setup();
-    render(<Home />);
+    render(<BankingDashboard />);
 
     await user.click(screen.getByRole("button", { name: "Connect" }));
 
@@ -99,7 +103,7 @@ describe("Banking Event Console", () => {
 
   it("publishes a transaction request and shows it as pending", async () => {
     const user = userEvent.setup();
-    render(<Home />);
+    render(<BankingDashboard />);
 
     await user.click(screen.getByRole("button", { name: "Publish Event" }));
 
@@ -123,7 +127,7 @@ describe("Banking Event Console", () => {
 
   it("shows live notification events from SSE", async () => {
     const user = userEvent.setup();
-    render(<Home />);
+    render(<BankingDashboard />);
 
     await user.click(screen.getByRole("button", { name: "Connect" }));
     act(() => {
