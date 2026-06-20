@@ -6,6 +6,7 @@ import Logger from "../utils/logger";
 
 class KafkaConsumer {
   private static readonly logger = Logger;
+  private static running = false;
   private static readonly transactionCreatedTopic =
     envConfig.kafkaTransactionCreatedTopic;
   private static readonly transactionProcessor = TransactionProcessor;
@@ -34,11 +35,16 @@ class KafkaConsumer {
         await KafkaConsumer.handleMessage(message);
       },
     });
+    KafkaConsumer.running = true;
 
     KafkaConsumer.logger.info("Kafka consumer started", {
       topic: KafkaConsumer.transactionCreatedTopic,
       groupId: envConfig.kafkaGroupId,
     });
+  }
+
+  public static isReady(): boolean {
+    return KafkaConsumer.running;
   }
 
   private static async handleMessage(message: KafkaMessage): Promise<void> {

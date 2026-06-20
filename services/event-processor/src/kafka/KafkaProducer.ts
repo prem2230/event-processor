@@ -6,6 +6,7 @@ import Logger from "../utils/logger";
 
 class KafkaProducer {
   private static readonly logger = Logger;
+  private static connected = false;
   private static readonly notificationCreatedTopic =
     envConfig.kafkaNotificationCreatedTopic;
   private static readonly kafka = new Kafka({
@@ -23,8 +24,13 @@ class KafkaProducer {
     });
 
     await KafkaProducer.producer.connect();
+    KafkaProducer.connected = true;
 
     KafkaProducer.logger.info("Kafka producer connected");
+  }
+
+  public static isReady(): boolean {
+    return KafkaProducer.connected;
   }
 
   public static async publishNotificationCreated(

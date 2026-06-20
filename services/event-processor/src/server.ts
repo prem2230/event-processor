@@ -1,3 +1,6 @@
+import type { Server } from "node:http";
+import app from "./app";
+import envConfig from "./config/env";
 import MongoConnection from "./config/mongo";
 import RedisService from "./config/redisClient";
 import KafkaConsumer from "./kafka/KafkaConsumer";
@@ -6,6 +9,8 @@ import Logger from "./utils/logger";
 
 class EventProcessorServer {
   private static readonly logger = Logger;
+  private static readonly app = app;
+  private static readonly port = envConfig.port;
   private static readonly mongoConnection = MongoConnection;
   private static readonly redisService = RedisService;
   private static readonly kafkaProducer = KafkaProducer;
@@ -14,12 +19,23 @@ class EventProcessorServer {
   public static async start(): Promise<void> {
     EventProcessorServer.logger.info("Starting Event Processor");
 
+    EventProcessorServer.listen();
     await EventProcessorServer.mongoConnection.connect();
     await EventProcessorServer.redisService.connect();
     await EventProcessorServer.kafkaProducer.connect();
     await EventProcessorServer.kafkaConsumer.start();
 
     EventProcessorServer.logger.info("Event Processor started");
+  }
+
+  private static listen(): Server {
+    return EventProcessorServer.app.listen(EventProcessorServer.port, () => {
+      EventProcessorServer.logger.info("Health server started", {
+        port: EventProcessorServer.port,
+        livenessPath: "/health/live",
+        readinessPath: "/health/ready",
+      });
+    });
   }
 
   public static handleStartupError(error: unknown): never {

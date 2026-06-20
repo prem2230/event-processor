@@ -10,6 +10,10 @@ class MongoConnection {
     await mongoose.connect(envConfig.mongoUri);
     MongoConnection.logger.info("MongoDB connected");
   }
+
+  public static isReady(): boolean {
+    return mongoose.connection.readyState === 1;
+  }
 }
 
 export default MongoConnection;

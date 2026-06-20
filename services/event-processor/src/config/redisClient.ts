@@ -29,6 +29,10 @@ class RedisService {
   public static async set(key: string, value: string): Promise<void> {
     await RedisService.client.set(key, value);
   }
+
+  public static isReady(): boolean {
+    return RedisService.client.isReady;
+  }
 }
 
 export default RedisService;

@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 class EnvConfig {
+  public static readonly port = Number(process.env.PORT) || 4000;
   public static readonly kafkaBroker =
     process.env.KAFKA_BROKER || "localhost:9092";
   public static readonly kafkaClientId =
