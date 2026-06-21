@@ -1,12 +1,14 @@
 import { Request, Response } from "express";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import HealthController from "../../src/controllers/HealthController";
 import TransactionController from "../../src/controllers/TransactionController";
-import { producer } from "../../src/kafka/KafkaService";
+import KafkaService from "../../src/kafka/KafkaService";
 
 jest.mock("../../src/kafka/KafkaService", () => ({
-  producer: {
-    send: jest.fn<() => Promise<unknown[]>>().mockResolvedValue([]),
+  __esModule: true,
+  default: {
+    publishTransactionCreated: jest
+      .fn<() => Promise<void>>()
+      .mockResolvedValue(undefined),
   },
 }));
 
@@ -24,19 +26,6 @@ describe("TransactionController", () => {
     jest.clearAllMocks();
   });
 
-  it("returns health status", () => {
-    const req = {} as Request;
-    const res = mockResponse();
-
-    HealthController.healthCheck(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({
-      service: "api-gateway",
-      status: "ok",
-    });
-  });
-
   it("creates transaction event and publishes to Kafka", async () => {
     const req = {
       body: {
@@ -51,9 +40,13 @@ describe("TransactionController", () => {
 
     await TransactionController.createTransaction(req, res);
 
-    expect(producer.send).toHaveBeenCalledWith(
+    expect(KafkaService.publishTransactionCreated).toHaveBeenCalledWith(
       expect.objectContaining({
-        topic: "transaction.created",
+        eventType: "transaction.created",
+        data: expect.objectContaining({
+          accountId: "acc-5001",
+          amount: 2500,
+        }),
       }),
     );
 
@@ -72,7 +65,7 @@ describe("TransactionController", () => {
     await TransactionController.createTransaction(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
-    expect(producer.send).not.toHaveBeenCalled();
+    expect(KafkaService.publishTransactionCreated).not.toHaveBeenCalled();
   });
 
   it("returns 400 when transaction type is invalid", async () => {
@@ -90,7 +83,7 @@ describe("TransactionController", () => {
     await TransactionController.createTransaction(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
-    expect(producer.send).not.toHaveBeenCalled();
+    expect(KafkaService.publishTransactionCreated).not.toHaveBeenCalled();
   });
 
   it("returns 400 when amount is not positive", async () => {
@@ -108,6 +101,6 @@ describe("TransactionController", () => {
     await TransactionController.createTransaction(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
-    expect(producer.send).not.toHaveBeenCalled();
+    expect(KafkaService.publishTransactionCreated).not.toHaveBeenCalled();
   });
 });

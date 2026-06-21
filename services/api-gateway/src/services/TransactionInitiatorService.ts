@@ -2,7 +2,7 @@ import type {
   CreateTransactionRequest,
   TransactionInitiationResponse,
 } from "../interfaces";
-import { producer } from "../kafka/KafkaService";
+import KafkaService from "../kafka/KafkaService";
 import Logger from "../utils/logger";
 import type { Request, Response } from "express";
 import BuildTransactionEvents from "./BuildTransactionEvents";
@@ -13,6 +13,7 @@ class TransactionInitiatorService {
   private static readonly transactionCreatedTopic =
     envConfig.kafkaTransactionCreatedTopic;
   private static readonly buildTransactionEvents = BuildTransactionEvents;
+  private static readonly kafkaService = KafkaService;
 
   public static getCreateTransactionRequest(
     req: Request<unknown, unknown, CreateTransactionRequest>,
@@ -71,15 +72,9 @@ class TransactionInitiatorService {
       accountId: event.data.accountId,
     });
 
-    await producer.send({
-      topic: TransactionInitiatorService.transactionCreatedTopic,
-      messages: [
-        {
-          key: data.accountId,
-          value: JSON.stringify(event),
-        },
-      ],
-    });
+    await TransactionInitiatorService.kafkaService.publishTransactionCreated(
+      event,
+    );
 
     TransactionInitiatorService.logger.info("Transaction event published", {
       eventId: event.eventId,

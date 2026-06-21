@@ -1,5 +1,6 @@
 import express, { type Express } from "express";
 import cors from "cors";
+import HealthRoutes from "./routes/HealthRoute";
 import TransactionRoutes from "./routes/TransactionRoute";
 
 class ApiGatewayApp {
@@ -16,11 +17,14 @@ class ApiGatewayApp {
   }
 
   private registerMiddlewares(): void {
+    this.app.disable("x-powered-by");
     this.app.use(cors());
     this.app.use(express.json());
   }
 
   private registerRoutes(): void {
+    this.app.use(HealthRoutes);
+    this.app.use("/v1/api", HealthRoutes);
     this.app.use("/v1/api", TransactionRoutes);
   }
 }
