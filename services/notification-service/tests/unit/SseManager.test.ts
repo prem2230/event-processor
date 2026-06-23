@@ -1,14 +1,14 @@
-import { Response } from "express";
-import { addClient, sendNotification } from "../../src/sse/SseManager";
-import { NotificationCreatedEvent } from "../../src/interfaces";
+import type { Response } from "express";
+import type { NotificationCreatedEvent } from "../../src/interfaces";
+import SseManager from "../../src/sse/SseManager";
 
 function mockSseResponse() {
   let closeHandler: (() => void) | undefined;
 
   const res: {
-    write: jest.Mock;
-    on: jest.Mock;
     close: () => void;
+    on: jest.Mock;
+    write: jest.Mock;
   } = {
     write: jest.fn(),
     on: jest.fn((event: string, handler: () => void): typeof res => {
@@ -40,29 +40,43 @@ function notificationEvent(userId: string): NotificationCreatedEvent {
 }
 
 describe("SseManager", () => {
+  beforeEach(() => {
+    SseManager.reset();
+  });
+
   it("writes notification events to connected clients", () => {
     const res = mockSseResponse();
     const event = notificationEvent("user-sse-1");
 
-    addClient("user-sse-1", res);
-    sendNotification(event);
+    SseManager.addClient("user-sse-1", res);
+    SseManager.sendNotification(event);
 
     expect(res.write).toHaveBeenCalledWith("event: notification\n");
     expect(res.write).toHaveBeenCalledWith(`data: ${JSON.stringify(event)}\n\n`);
+  });
+
+  it("tracks connected clients", () => {
+    SseManager.addClient("user-sse-count", mockSseResponse());
+    SseManager.addClient("user-sse-count", mockSseResponse());
+
+    expect(SseManager.getConnectedClientCount()).toBe(2);
   });
 
   it("removes clients when the SSE connection closes", () => {
     const res = mockSseResponse();
     const event = notificationEvent("user-sse-2");
 
-    addClient("user-sse-2", res);
+    SseManager.addClient("user-sse-2", res);
     res.close();
-    sendNotification(event);
+    SseManager.sendNotification(event);
 
     expect(res.write).not.toHaveBeenCalled();
+    expect(SseManager.getConnectedClientCount()).toBe(0);
   });
 
   it("does nothing when no clients are connected for a user", () => {
-    expect(() => sendNotification(notificationEvent("unknown-user"))).not.toThrow();
+    expect(() =>
+      SseManager.sendNotification(notificationEvent("unknown-user")),
+    ).not.toThrow();
   });
 });

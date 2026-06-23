@@ -1,29 +1,47 @@
-import { Response } from "express";
-import { NotificationCreatedEvent } from "../interfaces";
+import type { Response } from "express";
+import type { NotificationCreatedEvent } from "../interfaces";
 
-const clients = new Map<string, Set<Response>>();
+class SseManager {
+  private static readonly clients = new Map<string, Set<Response>>();
 
-export function addClient(userId: string, res: Response): void {
-    if (!clients.has(userId)) {
-        clients.set(userId, new Set());
+  public static addClient(userId: string, res: Response): void {
+    if (!SseManager.clients.has(userId)) {
+      SseManager.clients.set(userId, new Set());
     }
 
-    clients.get(userId)?.add(res);
+    SseManager.clients.get(userId)?.add(res);
 
     res.on("close", () => {
-        clients.get(userId)?.delete(res);
+      SseManager.clients.get(userId)?.delete(res);
+      if (SseManager.clients.get(userId)?.size === 0) {
+        SseManager.clients.delete(userId);
+      }
     });
-}
+  }
 
-export function sendNotification(event: NotificationCreatedEvent): void {
-    const userClients = clients.get(event.data.userId);
+  public static sendNotification(event: NotificationCreatedEvent): void {
+    const userClients = SseManager.clients.get(event.data.userId);
 
     if (!userClients) {
-        return;
+      return;
     }
 
     for (const client of userClients) {
-        client.write("event: notification\n");
-        client.write(`data: ${JSON.stringify(event)}\n\n`);
+      client.write("event: notification\n");
+      client.write(`data: ${JSON.stringify(event)}\n\n`);
     }
+  }
+
+  public static getConnectedClientCount(): number {
+    return Array.from(SseManager.clients.values()).reduce(
+      (total, userClients) => total + userClients.size,
+      0,
+    );
+  }
+
+  public static reset(): void {
+    SseManager.clients.clear();
+  }
 }
+
+export default SseManager;
