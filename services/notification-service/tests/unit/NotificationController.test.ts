@@ -1,12 +1,14 @@
-import { Request, Response } from "express";
-import {
-  healthCheck,
-  subscribeToNotifications,
-} from "../../src/controllers/NotificationController";
-import { addClient } from "../../src/sse/SseManager";
+import type { Request, Response } from "express";
+import NotificationController from "../../src/controllers/NotificationController";
+import HealthService from "../../src/services/HealthService";
+import SseManager from "../../src/sse/SseManager";
 
 jest.mock("../../src/sse/SseManager", () => ({
-  addClient: jest.fn(),
+  __esModule: true,
+  default: {
+    addClient: jest.fn(),
+    getConnectedClientCount: jest.fn().mockReturnValue(0),
+  },
 }));
 
 function mockResponse(): Response {
@@ -23,16 +25,68 @@ describe("NotificationController", () => {
     jest.clearAllMocks();
   });
 
-  it("returns health status", () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it("returns liveness status", () => {
     const res = mockResponse();
 
-    healthCheck({} as Request, res);
+    NotificationController.liveness({} as Request, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        service: "notification-service",
+        status: "ok",
+      }),
+    );
+  });
+
+  it("returns readiness status when Kafka is ready", () => {
+    const res = mockResponse();
+    jest.spyOn(HealthService, "getReadiness").mockReturnValue({
+      ready: true,
+      checks: {
+        kafkaConsumer: true,
+        sseManager: true,
+      },
+    });
+    jest.spyOn(HealthService, "getConnectedClientCount").mockReturnValue(2);
+
+    NotificationController.readiness({} as Request, res);
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
       service: "notification-service",
-      status: "ok",
+      status: "ready",
+      checks: {
+        kafkaConsumer: true,
+        sseManager: true,
+      },
+      connectedClients: 2,
     });
+  });
+
+  it("returns not ready when Kafka is not running", () => {
+    const res = mockResponse();
+    jest.spyOn(HealthService, "getReadiness").mockReturnValue({
+      ready: false,
+      checks: {
+        kafkaConsumer: false,
+        sseManager: true,
+      },
+    });
+
+    NotificationController.readiness({} as Request, res);
+
+    expect(res.status).toHaveBeenCalledWith(503);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        service: "notification-service",
+        status: "not_ready",
+      }),
+    );
   });
 
   it("subscribes a user to SSE notifications", () => {
@@ -43,15 +97,15 @@ describe("NotificationController", () => {
     } as unknown as Request;
     const res = mockResponse();
 
-    subscribeToNotifications(req, res);
+    NotificationController.subscribeToNotifications(req, res);
 
     expect(res.setHeader).toHaveBeenCalledWith(
       "Content-Type",
-      "text/event-stream"
+      "text/event-stream",
     );
     expect(res.setHeader).toHaveBeenCalledWith("Cache-Control", "no-cache");
     expect(res.setHeader).toHaveBeenCalledWith("Connection", "keep-alive");
     expect(res.write).toHaveBeenCalledWith("event: connected\n");
-    expect(addClient).toHaveBeenCalledWith("user-101", res);
+    expect(SseManager.addClient).toHaveBeenCalledWith("user-101", res);
   });
 });

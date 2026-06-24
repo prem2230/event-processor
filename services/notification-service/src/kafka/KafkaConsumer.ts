@@ -1,41 +1,96 @@
-import { Kafka } from "kafkajs";
+import { Kafka, type KafkaMessage } from "kafkajs";
 import envConfig from "../config/env";
-import { NotificationCreatedEvent } from "../interfaces";
-import { sendNotification } from "../sse/SseManager";
+import type { NotificationCreatedEvent } from "../interfaces";
+import SseManager from "../sse/SseManager";
+import Logger from "../utils/logger";
 
-const kafka = new Kafka({
+class KafkaConsumer {
+  private static readonly logger = Logger;
+  private static running = false;
+  private static readonly notificationCreatedTopic =
+    envConfig.kafkaNotificationCreatedTopic;
+  private static readonly sseManager = SseManager;
+  private static readonly kafka = new Kafka({
     clientId: envConfig.kafkaClientId,
     brokers: [envConfig.kafkaBroker],
-});
-
-const consumer = kafka.consumer({
+  });
+  private static readonly consumer = KafkaConsumer.kafka.consumer({
     groupId: envConfig.kafkaGroupId,
-});
+  });
 
-export async function startKafkaConsumer(): Promise<void> {
-    await consumer.connect();
-
-    await consumer.subscribe({
-        topic: "notification.created",
-        fromBeginning: false,
+  public static async start(): Promise<void> {
+    KafkaConsumer.logger.info("Connecting Kafka consumer", {
+      clientId: envConfig.kafkaClientId,
+      groupId: envConfig.kafkaGroupId,
+      broker: envConfig.kafkaBroker,
     });
 
-    await consumer.run({
-        eachMessage: async ({ message }) => {
-            if (!message.value) {
-                return;
-            }
+    await KafkaConsumer.consumer.connect();
+    await KafkaConsumer.consumer.subscribe({
+      topic: KafkaConsumer.notificationCreatedTopic,
+      fromBeginning: false,
+    });
+    await KafkaConsumer.consumer.run({
+      eachMessage: async ({ topic, partition, message }) => {
+        await KafkaConsumer.handleMessage(topic, partition, message);
+      },
+    });
+    KafkaConsumer.running = true;
 
-            const event = JSON.parse(message.value.toString()) as NotificationCreatedEvent;
+    KafkaConsumer.logger.info("Kafka consumer started", {
+      topic: KafkaConsumer.notificationCreatedTopic,
+      groupId: envConfig.kafkaGroupId,
+    });
+  }
 
-            sendNotification(event);
+  public static isReady(): boolean {
+    return KafkaConsumer.running;
+  }
 
-            console.log("Notification sent", {
-                userId: event.data.userId,
-                transactionId: event.data.transactionId,
-            });
-        },
+  private static async handleMessage(
+    topic: string,
+    partition: number,
+    message: KafkaMessage,
+  ): Promise<void> {
+    if (!message.value) {
+      KafkaConsumer.logger.warn("Ignoring Kafka message without a value", {
+        topic,
+        partition,
+        offset: message.offset,
+      });
+      return;
+    }
+
+    let event: NotificationCreatedEvent;
+
+    try {
+      event = JSON.parse(message.value.toString()) as NotificationCreatedEvent;
+    } catch (error) {
+      KafkaConsumer.logger.error("Failed to parse Kafka event", {
+        topic,
+        partition,
+        offset: message.offset,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+
+    KafkaConsumer.logger.info("Kafka notification event received", {
+      topic,
+      partition,
+      offset: message.offset,
+      eventId: event.eventId,
+      transactionId: event.data.transactionId,
     });
 
-    console.log("Notification Service listening to notification.created");
+    const recipientConnections =
+      KafkaConsumer.sseManager.sendNotification(event);
+    KafkaConsumer.logger.info("Notification event handled", {
+      eventId: event.eventId,
+      transactionId: event.data.transactionId,
+      recipientConnections,
+    });
+  }
 }
+
+export default KafkaConsumer;

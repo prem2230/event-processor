@@ -65,7 +65,13 @@ class Logger {
     message: unknown,
     meta?: LogMeta,
   ): string {
-    const payload = { timestamp, level, message, ...meta };
+    const payload = {
+      timestamp,
+      service: "api-gateway",
+      level,
+      message,
+      ...meta,
+    };
 
     try {
       return JSON.stringify(payload);
@@ -85,7 +91,7 @@ class Logger {
     const normalizedMeta =
       meta && Object.keys(meta).length ? ` ${JSON.stringify(meta)}` : "";
 
-    return `${timestamp} [${level.toUpperCase()}] ${normalizedMessage}${normalizedMeta}`;
+    return `${timestamp} [API-GATEWAY] [${level.toUpperCase()}] ${normalizedMessage}${normalizedMeta}`;
   }
 
   private static formatPrettyMessage(
@@ -94,7 +100,13 @@ class Logger {
     message: unknown,
     meta?: LogMeta,
   ): string {
-    const payload = { timestamp, level, message, ...meta };
+    const payload = {
+      timestamp,
+      service: "api-gateway",
+      level,
+      message,
+      ...meta,
+    };
 
     try {
       return JSON.stringify(payload, null, 2);

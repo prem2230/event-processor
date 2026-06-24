@@ -1,12 +1,8 @@
 import express from "express";
-import {
-    healthCheck,
-    subscribeToNotifications,
-} from "../controllers/NotificationController";
+import NotificationController from "../controllers/NotificationController";
 
 const router = express.Router();
 
-router.get("/health", healthCheck);
-router.get("/events/:userId", subscribeToNotifications);
+router.get("/events/:userId", NotificationController.subscribeToNotifications);
 
 export default router;

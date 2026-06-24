@@ -1,55 +1,86 @@
-import { redisClient } from "../config/redisClient";
-import { TransactionCreatedEvent } from "../interfaces";
-import { TransactionModel } from "../models/TransactionModel";
-import { publishNotificationCreated } from "../kafka/KafkaProducer";
+import RedisService from "../config/redisClient";
+import type { TransactionCreatedEvent } from "../interfaces";
+import KafkaProducer from "../kafka/KafkaProducer";
+import TransactionModel from "../models/TransactionModel";
+import Logger from "../utils/logger";
 
-export async function processTransaction(
-    event: TransactionCreatedEvent
-): Promise<void> {
+class TransactionProcessor {
+  private static readonly logger = Logger;
+  private static readonly redisService = RedisService;
+  private static readonly transactionModel = TransactionModel;
+  private static readonly kafkaProducer = KafkaProducer;
+
+  public static async process(event: TransactionCreatedEvent): Promise<void> {
+    const startedAt = Date.now();
     const transaction = event.data;
 
-    const existingTransaction = await TransactionModel.findOne({
-        transactionId: transaction.transactionId,
+    TransactionProcessor.logger.info("Transaction processing started", {
+      eventId: event.eventId,
+      transactionId: transaction.transactionId,
+      transactionType: transaction.type,
     });
+
+    const existingTransaction =
+      await TransactionProcessor.transactionModel.findByTransactionId(
+        transaction.transactionId,
+      );
 
     if (existingTransaction) {
-        console.log("Duplicate transaction ignored", transaction.transactionId);
-        return;
+      TransactionProcessor.logger.warn("Duplicate transaction ignored", {
+        eventId: event.eventId,
+        transactionId: transaction.transactionId,
+        durationMs: Date.now() - startedAt,
+      });
+      return;
     }
 
-    const balanceKey = `account:${transaction.accountId}:balance`;
-    const currentBalance = Number((await redisClient.get(balanceKey)) || 0);
-
+    const balanceKey = TransactionProcessor.getBalanceKey(
+      transaction.accountId,
+    );
+    const currentBalance = Number(
+      (await TransactionProcessor.redisService.get(balanceKey)) || 0,
+    );
     const updatedBalance =
-        transaction.type === "CREDIT"
-            ? currentBalance + transaction.amount
-            : currentBalance - transaction.amount;
+      transaction.type === "CREDIT"
+        ? currentBalance + transaction.amount
+        : currentBalance - transaction.amount;
 
-    await TransactionModel.create({
-        transactionId: transaction.transactionId,
-        eventId: event.eventId,
-        userId: transaction.userId,
-        accountId: transaction.accountId,
-        type: transaction.type,
-        amount: transaction.amount,
-        status: "COMPLETED",
-        processedAt: new Date(),
+    await TransactionProcessor.transactionModel.create({
+      transactionId: transaction.transactionId,
+      eventId: event.eventId,
+      userId: transaction.userId,
+      accountId: transaction.accountId,
+      type: transaction.type,
+      amount: transaction.amount,
+      status: "COMPLETED",
+      processedAt: new Date(),
     });
 
-    await redisClient.set(balanceKey, updatedBalance.toString());
+    await TransactionProcessor.redisService.set(
+      balanceKey,
+      updatedBalance.toString(),
+    );
 
-    await publishNotificationCreated({
-        userId: transaction.userId,
-        transactionId: transaction.transactionId,
-        accountId: transaction.accountId,
-        status: "COMPLETED",
-        message: "Transaction completed successfully",
-        updatedBalance,
+    await TransactionProcessor.kafkaProducer.publishNotificationCreated({
+      userId: transaction.userId,
+      transactionId: transaction.transactionId,
+      accountId: transaction.accountId,
+      status: "COMPLETED",
+      message: "Transaction completed successfully",
+      updatedBalance,
     });
 
-    console.log("Transaction processed", {
-        transactionId: transaction.transactionId,
-        accountId: transaction.accountId,
-        updatedBalance,
+    TransactionProcessor.logger.info("Transaction processed", {
+      eventId: event.eventId,
+      transactionId: transaction.transactionId,
+      status: "COMPLETED",
+      durationMs: Date.now() - startedAt,
     });
+  }
+
+  private static getBalanceKey(accountId: string): string {
+    return `account:${accountId}:balance`;
+  }
 }
+
+export default TransactionProcessor;

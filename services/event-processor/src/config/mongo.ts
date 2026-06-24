@@ -1,7 +1,19 @@
 import mongoose from "mongoose";
-import envConfig from "../config/env";
+import envConfig from "./env";
+import Logger from "../utils/logger";
 
-export async function connectMongo(): Promise<void> {
+class MongoConnection {
+  private static readonly logger = Logger;
+
+  public static async connect(): Promise<void> {
+    MongoConnection.logger.info("Connecting to MongoDB");
     await mongoose.connect(envConfig.mongoUri);
-    console.log("MongoDB connected");
+    MongoConnection.logger.info("MongoDB connected");
+  }
+
+  public static isReady(): boolean {
+    return mongoose.connection.readyState === 1;
+  }
 }
+
+export default MongoConnection;
