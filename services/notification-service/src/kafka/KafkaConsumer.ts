@@ -31,8 +31,8 @@ class KafkaConsumer {
       fromBeginning: false,
     });
     await KafkaConsumer.consumer.run({
-      eachMessage: async ({ message }) => {
-        await KafkaConsumer.handleMessage(message);
+      eachMessage: async ({ topic, partition, message }) => {
+        await KafkaConsumer.handleMessage(topic, partition, message);
       },
     });
     KafkaConsumer.running = true;
@@ -47,22 +47,48 @@ class KafkaConsumer {
     return KafkaConsumer.running;
   }
 
-  private static async handleMessage(message: KafkaMessage): Promise<void> {
+  private static async handleMessage(
+    topic: string,
+    partition: number,
+    message: KafkaMessage,
+  ): Promise<void> {
     if (!message.value) {
       KafkaConsumer.logger.warn("Ignoring Kafka message without a value", {
-        topic: KafkaConsumer.notificationCreatedTopic,
+        topic,
+        partition,
+        offset: message.offset,
       });
       return;
     }
 
-    const event = JSON.parse(
-      message.value.toString(),
-    ) as NotificationCreatedEvent;
+    let event: NotificationCreatedEvent;
 
-    KafkaConsumer.sseManager.sendNotification(event);
-    KafkaConsumer.logger.info("Notification sent", {
-      userId: event.data.userId,
+    try {
+      event = JSON.parse(message.value.toString()) as NotificationCreatedEvent;
+    } catch (error) {
+      KafkaConsumer.logger.error("Failed to parse Kafka event", {
+        topic,
+        partition,
+        offset: message.offset,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+
+    KafkaConsumer.logger.info("Kafka notification event received", {
+      topic,
+      partition,
+      offset: message.offset,
+      eventId: event.eventId,
       transactionId: event.data.transactionId,
+    });
+
+    const recipientConnections =
+      KafkaConsumer.sseManager.sendNotification(event);
+    KafkaConsumer.logger.info("Notification event handled", {
+      eventId: event.eventId,
+      transactionId: event.data.transactionId,
+      recipientConnections,
     });
   }
 }

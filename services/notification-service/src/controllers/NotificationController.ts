@@ -47,6 +47,10 @@ class NotificationController {
     res.write(`data: ${JSON.stringify({ userId, message: "connected" })}\n\n`);
 
     NotificationController.sseManager.addClient(userId, res);
+    NotificationController.logger.info("SSE subscription established", {
+      connectedClients:
+        NotificationController.healthService.getConnectedClientCount(),
+    });
   }
 }
 

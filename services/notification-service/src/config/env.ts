@@ -4,6 +4,16 @@ import dotenv from "dotenv";
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 class EnvConfig {
+  public static readonly nodeEnv =
+    process.env.NODE_ENV || "development";
+  public static readonly logFormat = (
+    process.env.LOG_FORMAT ||
+    (EnvConfig.nodeEnv === "development" ? "pretty" : "json")
+  ).toLowerCase();
+  public static readonly logLevel = (
+    process.env.LOG_LEVEL || "info"
+  ).toLowerCase();
+  public static readonly levelPriority = { error: 0, warn: 1, info: 2 };
   public static readonly port = Number(process.env.PORT) || 3002;
   public static readonly kafkaBroker =
     process.env.KAFKA_BROKER || "localhost:9092";
