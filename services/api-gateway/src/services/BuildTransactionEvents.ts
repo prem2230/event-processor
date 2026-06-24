@@ -14,11 +14,7 @@ class BuildTransactionEvents {
   public static buildTransactionCreatedEvent(
     data: CreateTransactionRequest,
   ): TransactionCreatedEvent {
-    BuildTransactionEvents.logger.info("Building transaction created event", {
-      userId: data.userId,
-      accountId: data.accountId,
-    });
-    return {
+    const event: TransactionCreatedEvent = {
       eventId: IdGenerator.generateId(),
       eventType: BuildTransactionEvents.transactionCreatedTopic,
       occurredAt: new Date().toISOString(),
@@ -31,6 +27,15 @@ class BuildTransactionEvents {
         status: "PENDING",
       },
     };
+
+    BuildTransactionEvents.logger.info("Transaction event built", {
+      eventId: event.eventId,
+      transactionId: event.data.transactionId,
+      eventType: event.eventType,
+      transactionType: event.data.type,
+    });
+
+    return event;
   }
 }
 

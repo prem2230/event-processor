@@ -33,6 +33,14 @@ class KafkaService {
   public static async publishTransactionCreated(
     event: TransactionCreatedEvent,
   ): Promise<void> {
+    const startedAt = Date.now();
+
+    KafkaService.logger.info("Sending Kafka event", {
+      topic: envConfig.kafkaTransactionCreatedTopic,
+      eventId: event.eventId,
+      transactionId: event.data.transactionId,
+    });
+
     await KafkaService.producer.send({
       topic: envConfig.kafkaTransactionCreatedTopic,
       messages: [
@@ -41,6 +49,13 @@ class KafkaService {
           value: JSON.stringify(event),
         },
       ],
+    });
+
+    KafkaService.logger.info("Kafka event acknowledged", {
+      topic: envConfig.kafkaTransactionCreatedTopic,
+      eventId: event.eventId,
+      transactionId: event.data.transactionId,
+      durationMs: Date.now() - startedAt,
     });
   }
 }

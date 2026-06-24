@@ -46,10 +46,11 @@ class TransactionInitiatorService {
       TransactionInitiatorService.logger.warn(
         "Create transaction request validation failed",
         {
-          userId: data.userId,
-          accountId: data.accountId,
-          type: data.type,
           validationError,
+          hasUserId: Boolean(data.userId),
+          hasAccountId: Boolean(data.accountId),
+          hasType: Boolean(data.type),
+          hasNumericAmount: typeof data.amount === "number",
         },
       );
       return {
@@ -68,8 +69,7 @@ class TransactionInitiatorService {
       topic: TransactionInitiatorService.transactionCreatedTopic,
       eventId: event.eventId,
       transactionId: event.data.transactionId,
-      userId: event.data.userId,
-      accountId: event.data.accountId,
+      transactionType: event.data.type,
     });
 
     await TransactionInitiatorService.kafkaService.publishTransactionCreated(
@@ -79,8 +79,7 @@ class TransactionInitiatorService {
     TransactionInitiatorService.logger.info("Transaction event published", {
       eventId: event.eventId,
       transactionId: event.data.transactionId,
-      userId: event.data.userId,
-      accountId: event.data.accountId,
+      topic: TransactionInitiatorService.transactionCreatedTopic,
     });
 
     return {
@@ -101,27 +100,22 @@ class TransactionInitiatorService {
       TransactionInitiatorService.logger.warn(
         "Invalid create transaction request",
         {
-          userId,
-          accountId,
-          type,
+          hasUserId: Boolean(userId),
+          hasAccountId: Boolean(accountId),
+          hasType: Boolean(type),
+          hasNumericAmount: typeof amount === "number",
         },
       );
       return "userId, accountId, type, and amount are required";
     }
 
     if (!["CREDIT", "DEBIT"].includes(type)) {
-      TransactionInitiatorService.logger.warn("Invalid transaction type", {
-        type,
-      });
+      TransactionInitiatorService.logger.warn("Invalid transaction type");
       return "type must be CREDIT or DEBIT";
     }
 
     if (amount <= 0) {
-      TransactionInitiatorService.logger.warn("Invalid transaction amount", {
-        userId,
-        accountId,
-        type,
-      });
+      TransactionInitiatorService.logger.warn("Invalid transaction amount");
       return "amount must be greater than 0";
     }
 
