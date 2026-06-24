@@ -7,9 +7,6 @@ class HealthController {
   private static readonly healthService = HealthService;
 
   public static liveness(_req: Request, res: Response): Response {
-    HealthController.logger.info("Liveness check passed", {
-      uptimeSeconds: Math.floor(process.uptime()),
-    });
     return res.status(200).json({
       service: "event-processor",
       status: "ok",
@@ -27,10 +24,6 @@ class HealthController {
       });
     }
 
-    HealthController.logger.info("Readiness check completed", {
-      status: readiness.ready ? "ready" : "not_ready",
-      checks: readiness.checks,
-    });
     return res.status(statusCode).json({
       service: "event-processor",
       status: readiness.ready ? "ready" : "not_ready",

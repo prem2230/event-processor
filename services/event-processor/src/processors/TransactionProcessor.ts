@@ -11,7 +11,15 @@ class TransactionProcessor {
   private static readonly kafkaProducer = KafkaProducer;
 
   public static async process(event: TransactionCreatedEvent): Promise<void> {
+    const startedAt = Date.now();
     const transaction = event.data;
+
+    TransactionProcessor.logger.info("Transaction processing started", {
+      eventId: event.eventId,
+      transactionId: transaction.transactionId,
+      transactionType: transaction.type,
+    });
+
     const existingTransaction =
       await TransactionProcessor.transactionModel.findByTransactionId(
         transaction.transactionId,
@@ -19,7 +27,9 @@ class TransactionProcessor {
 
     if (existingTransaction) {
       TransactionProcessor.logger.warn("Duplicate transaction ignored", {
+        eventId: event.eventId,
         transactionId: transaction.transactionId,
+        durationMs: Date.now() - startedAt,
       });
       return;
     }
@@ -61,9 +71,10 @@ class TransactionProcessor {
     });
 
     TransactionProcessor.logger.info("Transaction processed", {
+      eventId: event.eventId,
       transactionId: transaction.transactionId,
-      accountId: transaction.accountId,
-      updatedBalance,
+      status: "COMPLETED",
+      durationMs: Date.now() - startedAt,
     });
   }
 

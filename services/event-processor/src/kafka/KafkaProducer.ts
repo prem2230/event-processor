@@ -36,13 +36,13 @@ class KafkaProducer {
   public static async publishNotificationCreated(
     data: NotificationCreatedEvent["data"],
   ): Promise<void> {
+    const startedAt = Date.now();
     const event = KafkaProducer.buildNotificationCreatedEvent(data);
 
     KafkaProducer.logger.info("Publishing notification event", {
       topic: KafkaProducer.notificationCreatedTopic,
       eventId: event.eventId,
       transactionId: data.transactionId,
-      userId: data.userId,
     });
 
     await KafkaProducer.producer.send({
@@ -58,6 +58,8 @@ class KafkaProducer {
     KafkaProducer.logger.info("Notification event published", {
       eventId: event.eventId,
       transactionId: data.transactionId,
+      topic: KafkaProducer.notificationCreatedTopic,
+      durationMs: Date.now() - startedAt,
     });
   }
 
