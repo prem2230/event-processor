@@ -28,10 +28,12 @@ describe("Health routes", () => {
   });
 
   it("reports not ready while the Kafka producer is unavailable", async () => {
-    jest.spyOn(HealthService, "getReadiness").mockReturnValue({
+    jest.spyOn(HealthService, "getReadiness").mockResolvedValue({
       ready: false,
       checks: {
         kafkaProducer: false,
+        userService: true,
+        accountService: true,
       },
     });
 
@@ -43,10 +45,12 @@ describe("Health routes", () => {
   });
 
   it("reports ready after the Kafka producer connects", async () => {
-    jest.spyOn(HealthService, "getReadiness").mockReturnValue({
+    jest.spyOn(HealthService, "getReadiness").mockResolvedValue({
       ready: true,
       checks: {
         kafkaProducer: true,
+        userService: true,
+        accountService: true,
       },
     });
 

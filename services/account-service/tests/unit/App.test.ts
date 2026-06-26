@@ -1,0 +1,26 @@
+import request from "supertest";
+import app from "../../src/app";
+import HealthService from "../../src/services/HealthService";
+
+describe("Account Service app", () => {
+  afterEach(() => jest.restoreAllMocks());
+
+  it("reports liveness", async () => {
+    const response = await request(app).get("/health/live");
+    expect(response.status).toBe(200);
+    expect(response.body.service).toBe("account-service");
+  });
+
+  it("reports readiness from MongoDB state", async () => {
+    jest.spyOn(HealthService, "getReadiness").mockReturnValue({
+      ready: false,
+      checks: { mongo: false },
+    });
+    expect((await request(app).get("/health/ready")).status).toBe(503);
+  });
+
+  it("rejects internal routes without a service token", async () => {
+    const response = await request(app).get("/internal/accounts");
+    expect(response.status).toBe(401);
+  });
+});

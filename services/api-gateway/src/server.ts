@@ -13,6 +13,7 @@ class ApiGatewayServer {
   public static async start(): Promise<void> {
     ApiGatewayServer.logger.info("Starting API Gateway");
 
+    envConfig.validateProductionSecrets();
     ApiGatewayServer.listen();
     await ApiGatewayServer.kafkaService.connect();
 

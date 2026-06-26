@@ -21,6 +21,32 @@ class EnvConfig {
     process.env.KAFKA_BROKER || "localhost:9092";
   public static readonly kafkaTransactionCreatedTopic =
     process.env.KAFKA_TRANSACTION_CREATED_TOPIC || "transaction.created";
+  public static readonly userServiceUrl =
+    process.env.USER_SERVICE_URL || "http://localhost:3004";
+  public static readonly accountServiceUrl =
+    process.env.ACCOUNT_SERVICE_URL || "http://localhost:3005";
+  public static readonly internalServiceToken =
+    process.env.INTERNAL_SERVICE_TOKEN || "local-internal-service-token";
+  public static readonly jwtSecret =
+    process.env.JWT_SECRET || "replace-this-local-jwt-secret-with-32-characters";
+  public static readonly jwtIssuer =
+    process.env.JWT_ISSUER || "banking-api-gateway";
+  public static readonly jwtAudience =
+    process.env.JWT_AUDIENCE || "banking-platform";
+  public static readonly jwtExpiresInSeconds =
+    Number(process.env.JWT_EXPIRES_IN_SECONDS) || 900;
+  public static readonly upstreamTimeoutMs =
+    Number(process.env.UPSTREAM_TIMEOUT_MS) || 3000;
+
+  public static validateProductionSecrets(): void {
+    if (EnvConfig.nodeEnv !== "production") return;
+    if (
+      EnvConfig.jwtSecret.includes("replace-this") ||
+      EnvConfig.internalServiceToken === "local-internal-service-token"
+    ) {
+      throw new Error("Production authentication secrets are not configured");
+    }
+  }
 }
 
 export default EnvConfig;

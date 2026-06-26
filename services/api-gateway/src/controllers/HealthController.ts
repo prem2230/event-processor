@@ -14,8 +14,11 @@ class HealthController {
     });
   }
 
-  public static readiness(_req: Request, res: Response): Response {
-    const readiness = HealthController.healthService.getReadiness();
+  public static async readiness(
+    _req: Request,
+    res: Response,
+  ): Promise<Response> {
+    const readiness = await HealthController.healthService.getReadiness();
     const statusCode = readiness.ready ? 200 : 503;
 
     if (!readiness.ready) {

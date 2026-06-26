@@ -7,6 +7,8 @@ A TypeScript microservice project that simulates an enterprise banking transacti
 ```txt
 Frontend
   -> API Gateway
+       -> User Service
+       -> Account Service
   -> Kafka topic: transaction.created
   -> Event Processor
   -> MongoDB transaction write
@@ -23,7 +25,23 @@ Frontend
 services/api-gateway
 ```
 
-Receives transaction requests, validates payloads, and publishes `transaction.created` events to Kafka.
+Terminates public authentication, issues and validates JWT access tokens, verifies
+account ownership, routes user/account requests, and publishes
+`transaction.created` events to Kafka.
+
+```txt
+services/user-service
+```
+
+Owns user profiles, password hashing, registration, and credential verification.
+Passwords use `scrypt` with per-user salts and are never returned by the API.
+
+```txt
+services/account-service
+```
+
+Owns bank account metadata and user-to-account ownership. Account lookups are
+always scoped to the authenticated user.
 
 ```txt
 services/event-processor
@@ -47,6 +65,8 @@ Next.js dashboard for creating transactions, connecting to SSE, and viewing live
 
 ```txt
 POST /v1/api/transactions
+  -> validate JWT
+  -> verify account ownership
   -> transaction.created
   -> process transaction
   -> save transaction
@@ -76,6 +96,8 @@ account.balance.updated
 API Gateway:          http://localhost:3000
 Notification Service: http://localhost:3002
 Frontend:             http://localhost:3003
+User Service:         http://localhost:3004
+Account Service:      http://localhost:3005
 Kafka:                localhost:9092
 MongoDB:              localhost:27017
 Redis:                localhost:6379
@@ -105,6 +127,22 @@ npm install
 npm run dev
 ```
 
+Run User Service:
+
+```bash
+cd services/user-service
+npm install
+npm run dev
+```
+
+Run Account Service:
+
+```bash
+cd services/account-service
+npm install
+npm run dev
+```
+
 Run Notification Service:
 
 ```bash
@@ -127,21 +165,73 @@ Open:
 http://localhost:3003
 ```
 
-## API Example
+## Authentication
+
+Register:
 
 ```http
-POST http://localhost:3000/v1/api/transactions
+POST http://localhost:3000/v1/api/auth/register
 Content-Type: application/json
 ```
 
 ```json
 {
-  "userId": "user-101",
-  "accountId": "acc-5001",
+  "email": "user@example.com",
+  "password": "StrongPassword123!",
+  "firstName": "Test",
+  "lastName": "User"
+}
+```
+
+Login:
+
+```http
+POST http://localhost:3000/v1/api/auth/login
+Content-Type: application/json
+```
+
+```json
+{
+  "email": "user@example.com",
+  "password": "StrongPassword123!"
+}
+```
+
+The login response contains a short-lived Bearer access token.
+
+## Account API
+
+```http
+POST http://localhost:3000/v1/api/accounts
+Authorization: Bearer <access-token>
+Content-Type: application/json
+```
+
+```json
+{
+  "type": "CURRENT",
+  "currency": "INR"
+}
+```
+
+## Transaction API
+
+```http
+POST http://localhost:3000/v1/api/transactions
+Authorization: Bearer <access-token>
+Content-Type: application/json
+```
+
+```json
+{
+  "accountId": "<account-id>",
   "type": "CREDIT",
   "amount": 2500
 }
 ```
+
+The gateway derives `userId` from the verified JWT. Client-supplied identity is
+never trusted.
 
 ## SSE Endpoint
 
@@ -160,6 +250,19 @@ npm test
 npm run build
 npm run validate
 ```
+
+## Security Boundaries
+
+- API Gateway is the only public entry point for user and account APIs.
+- JWTs are signed with HS256 and validated for algorithm, issuer, audience, and
+  expiration.
+- User and Account services require `X-Internal-Service-Token`.
+- Production startup rejects the local default JWT and internal service secrets.
+- HTTPS certificates are validated by Node for `https://` upstream URLs. TLS
+  should normally terminate at the ingress/load balancer, while internal traffic
+  can use private networking or service-mesh mTLS.
+- Never commit production JWT secrets, internal tokens, database credentials, or
+  TLS private keys.
 
 Frontend supports:
 

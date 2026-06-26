@@ -1,5 +1,7 @@
 import type { Request, Response } from "express";
-import type { CreateTransactionRequest } from "../interfaces";
+import type { CreateTransactionHttpRequest } from "../interfaces";
+import type { AuthenticatedRequest } from "../types";
+import AccountServiceClient from "../services/AccountServiceClient";
 import TransactionInitiatorService from "../services/TransactionInitiatorService";
 import Logger from "../utils/logger";
 
@@ -8,13 +10,25 @@ class TransactionController {
   private static transactionInitiatorService = TransactionInitiatorService;
 
   public static async createTransaction(
-    req: Request<unknown, unknown, CreateTransactionRequest>,
+    req: AuthenticatedRequest &
+      Request<unknown, unknown, CreateTransactionHttpRequest>,
     res: Response,
   ): Promise<Response> {
     const startedAt = Date.now();
 
     try {
-      const data = TransactionInitiatorService.getCreateTransactionRequest(req);
+      const account = await AccountServiceClient.get(
+        req.authenticatedUser?.userId || "",
+        req.body.accountId,
+      );
+      if (account.status !== 200) {
+        return res.status(403).json({ message: "Account access denied" });
+      }
+
+      const data = {
+        ...TransactionInitiatorService.getCreateTransactionRequest(req),
+        userId: req.authenticatedUser?.userId || "",
+      };
       TransactionController.logger.info("Received create transaction request", {
         method: req.method,
         path: req.path,

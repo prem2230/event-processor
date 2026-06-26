@@ -2,6 +2,9 @@ import express, { type Express } from "express";
 import cors from "cors";
 import HealthRoutes from "./routes/HealthRoute";
 import TransactionRoutes from "./routes/TransactionRoute";
+import AuthRoutes from "./routes/AuthRoute";
+import UserRoutes from "./routes/UserRoute";
+import AccountRoutes from "./routes/AccountRoute";
 
 class ApiGatewayApp {
   private readonly app: Express;
@@ -25,6 +28,9 @@ class ApiGatewayApp {
   private registerRoutes(): void {
     this.app.use(HealthRoutes);
     this.app.use("/v1/api", HealthRoutes);
+    this.app.use("/v1/api", AuthRoutes);
+    this.app.use("/v1/api", UserRoutes);
+    this.app.use("/v1/api", AccountRoutes);
     this.app.use("/v1/api", TransactionRoutes);
   }
 }
