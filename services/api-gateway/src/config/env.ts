@@ -28,7 +28,8 @@ class EnvConfig {
   public static readonly internalServiceToken =
     process.env.INTERNAL_SERVICE_TOKEN || "local-internal-service-token";
   public static readonly jwtSecret =
-    process.env.JWT_SECRET || "replace-this-local-jwt-secret-with-32-characters";
+    process.env.JWT_SECRET ||
+    "replace-this-local-jwt-secret-with-32-characters";
   public static readonly jwtIssuer =
     process.env.JWT_ISSUER || "banking-api-gateway";
   public static readonly jwtAudience =

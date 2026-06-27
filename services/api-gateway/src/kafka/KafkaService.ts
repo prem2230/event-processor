@@ -1,4 +1,4 @@
-import { Kafka } from "kafkajs";
+import { Kafka, Partitioners } from "kafkajs";
 import envConfig from "../config/env";
 import type { TransactionCreatedEvent } from "../interfaces";
 import Logger from "../utils/logger";
@@ -10,7 +10,9 @@ class KafkaService {
     clientId: envConfig.kafkaClientId,
     brokers: [envConfig.kafkaBroker],
   });
-  private static readonly producer = KafkaService.kafka.producer();
+  private static readonly producer = KafkaService.kafka.producer({
+    createPartitioner: Partitioners.LegacyPartitioner,
+  });
   private static readonly envConfig = envConfig;
 
   public static async connect(): Promise<void> {

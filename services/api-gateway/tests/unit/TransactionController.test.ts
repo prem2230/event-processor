@@ -1,15 +1,18 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import TransactionController from "../../src/controllers/TransactionController";
 import KafkaService from "../../src/kafka/KafkaService";
 import AccountServiceClient from "../../src/services/AccountServiceClient";
+import type { CreateTransactionHttpRequest } from "../../src/interfaces";
+import type { AuthenticatedRequest } from "../../src/types";
+
+type TransactionRequest = AuthenticatedRequest &
+  Request<unknown, unknown, CreateTransactionHttpRequest>;
 
 jest.mock("../../src/kafka/KafkaService", () => ({
   __esModule: true,
   default: {
-    publishTransactionCreated: jest
-      .fn<() => Promise<void>>()
-      .mockResolvedValue(undefined),
+    publishTransactionCreated: jest.fn().mockResolvedValue(undefined),
   },
 }));
 jest.mock("../../src/services/AccountServiceClient", () => ({
@@ -17,7 +20,13 @@ jest.mock("../../src/services/AccountServiceClient", () => ({
   default: {
     get: jest.fn().mockResolvedValue({
       status: 200,
-      body: { accountId: "acc-5001", userId: "user-101" },
+      body: {
+        accountId: "acc-5001",
+        userId: "user-101",
+        type: "SAVINGS",
+        currency: "INR",
+        status: "ACTIVE",
+      },
     }),
   },
 }));
@@ -50,7 +59,7 @@ describe("TransactionController", () => {
         type: "CREDIT",
         amount: 2500,
       },
-    } as Request;
+    } as unknown as TransactionRequest;
 
     const res = mockResponse();
 
@@ -80,7 +89,7 @@ describe("TransactionController", () => {
       body: {
         userId: "user-101",
       },
-    } as Request;
+    } as unknown as TransactionRequest;
 
     const res = mockResponse();
 
@@ -104,7 +113,7 @@ describe("TransactionController", () => {
         type: "TRANSFER",
         amount: 2500,
       },
-    } as Request;
+    } as unknown as TransactionRequest;
 
     const res = mockResponse();
 
@@ -128,7 +137,7 @@ describe("TransactionController", () => {
         type: "CREDIT",
         amount: 0,
       },
-    } as Request;
+    } as unknown as TransactionRequest;
 
     const res = mockResponse();
 
@@ -156,7 +165,7 @@ describe("TransactionController", () => {
         type: "CREDIT",
         amount: 2500,
       },
-    } as unknown as Request;
+    } as unknown as TransactionRequest;
     const res = mockResponse();
 
     await TransactionController.createTransaction(req, res);

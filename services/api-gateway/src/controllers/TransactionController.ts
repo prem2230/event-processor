@@ -6,15 +6,15 @@ import TransactionInitiatorService from "../services/TransactionInitiatorService
 import Logger from "../utils/logger";
 
 class TransactionController {
-  private static readonly logger = Logger;
-  private static transactionInitiatorService = TransactionInitiatorService;
-  private static accountServiceClient = AccountServiceClient;
+  private readonly logger = Logger;
+  private readonly transactionInitiatorService = TransactionInitiatorService;
+  private readonly accountServiceClient = AccountServiceClient;
 
-  public static async createTransaction(
+  public readonly createTransaction = async (
     req: AuthenticatedRequest &
       Request<unknown, unknown, CreateTransactionHttpRequest>,
     res: Response,
-  ): Promise<Response> {
+  ): Promise<Response> => {
     const startedAt = Date.now();
 
     try {
@@ -35,9 +35,7 @@ class TransactionController {
         path: req.path,
       });
       const result =
-        await this.transactionInitiatorService.initiateTransaction(
-          data,
-        );
+        await this.transactionInitiatorService.initiateTransaction(data);
 
       this.logger.info("Create transaction request completed", {
         method: req.method,
@@ -59,7 +57,7 @@ class TransactionController {
         res,
       );
     }
-  }
+  };
 }
 
-export default TransactionController;
+export default new TransactionController();

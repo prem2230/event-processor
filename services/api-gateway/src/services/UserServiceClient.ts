@@ -1,5 +1,9 @@
 import envConfig from "../config/env";
-import type { LoginRequest, RegisterUserRequest, UserProfile } from "../interfaces";
+import type {
+  LoginRequest,
+  RegisterUserRequest,
+  UserProfile,
+} from "../interfaces";
 import ServiceClient from "./ServiceClient";
 
 class UserServiceClient {

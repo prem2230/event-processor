@@ -4,14 +4,14 @@ import TokenService from "../services/TokenService";
 import Logger from "../utils/logger";
 
 class AuthenticationMiddleware {
-  private static readonly logger = Logger;
-  private static readonly tokenService = TokenService;
+  private readonly logger = Logger;
+  private readonly tokenService = TokenService;
 
-  public static validate(
+  public readonly validate = (
     req: AuthenticatedRequest,
     res: Response,
     next: NextFunction,
-  ): void {
+  ): void => {
     const authorization = req.header("authorization") || "";
     const [scheme, token] = authorization.split(" ");
 
@@ -30,7 +30,7 @@ class AuthenticationMiddleware {
       });
       res.status(401).json({ message: "Invalid or expired token" });
     }
-  }
+  };
 }
 
-export default AuthenticationMiddleware;
+export default new AuthenticationMiddleware();

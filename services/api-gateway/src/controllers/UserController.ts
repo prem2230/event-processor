@@ -3,16 +3,16 @@ import UserServiceClient from "../services/UserServiceClient";
 import type { AuthenticatedRequest } from "../types";
 
 class UserController {
-  private static readonly userServiceClient = UserServiceClient;
+  private readonly userServiceClient = UserServiceClient;
 
-  public static async getProfile(
+  public readonly getProfile = async (
     req: AuthenticatedRequest,
     res: Response,
-  ): Promise<Response> {
+  ): Promise<Response> => {
     const result = await this.userServiceClient.getProfile(
       req.authenticatedUser?.userId || "",
     );
     return res.status(result.status).json(result.body);
-  }
+  };
 }
-export default UserController;
+export default new UserController();

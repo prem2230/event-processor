@@ -26,12 +26,9 @@ class TransactionInitiatorService {
     error: unknown,
     res: Response,
   ): Response {
-    this.logger.error(
-      "Failed to publish transaction event",
-      {
-        error: error instanceof Error ? error.message : String(error),
-      },
-    );
+    this.logger.error("Failed to publish transaction event", {
+      error: error instanceof Error ? error.message : String(error),
+    });
 
     return res.status(500).json({
       message: "Failed to publish transaction event",
@@ -41,19 +38,15 @@ class TransactionInitiatorService {
   public static async initiateTransaction(
     data: CreateTransactionRequest,
   ): Promise<TransactionInitiationResponse> {
-    const validationError =
-      this.validateCreateTransactionRequest(data);
+    const validationError = this.validateCreateTransactionRequest(data);
     if (validationError) {
-      this.logger.warn(
-        "Create transaction request validation failed",
-        {
-          validationError,
-          hasUserId: Boolean(data.userId),
-          hasAccountId: Boolean(data.accountId),
-          hasType: Boolean(data.type),
-          hasNumericAmount: typeof data.amount === "number",
-        },
-      );
+      this.logger.warn("Create transaction request validation failed", {
+        validationError,
+        hasUserId: Boolean(data.userId),
+        hasAccountId: Boolean(data.accountId),
+        hasType: Boolean(data.type),
+        hasNumericAmount: typeof data.amount === "number",
+      });
       return {
         statusCode: 400,
         body: {
@@ -62,9 +55,7 @@ class TransactionInitiatorService {
       };
     }
     const event =
-      this.buildTransactionEvents.buildTransactionCreatedEvent(
-        data,
-      );
+      this.buildTransactionEvents.buildTransactionCreatedEvent(data);
 
     this.logger.info("Publishing transaction event", {
       topic: this.transactionCreatedTopic,
@@ -73,9 +64,7 @@ class TransactionInitiatorService {
       transactionType: event.data.type,
     });
 
-    await this.kafkaService.publishTransactionCreated(
-      event,
-    );
+    await this.kafkaService.publishTransactionCreated(event);
 
     this.logger.info("Transaction event published", {
       eventId: event.eventId,
@@ -98,15 +87,12 @@ class TransactionInitiatorService {
     const { userId, accountId, type, amount } = data;
 
     if (!userId || !accountId || !type || typeof amount !== "number") {
-      this.logger.warn(
-        "Invalid create transaction request",
-        {
-          hasUserId: Boolean(userId),
-          hasAccountId: Boolean(accountId),
-          hasType: Boolean(type),
-          hasNumericAmount: typeof amount === "number",
-        },
-      );
+      this.logger.warn("Invalid create transaction request", {
+        hasUserId: Boolean(userId),
+        hasAccountId: Boolean(accountId),
+        hasType: Boolean(type),
+        hasNumericAmount: typeof amount === "number",
+      });
       return "userId, accountId, type, and amount are required";
     }
 

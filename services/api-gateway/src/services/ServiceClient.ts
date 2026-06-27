@@ -14,7 +14,10 @@ class ServiceClient {
   ): Promise<ServiceResponse<T>> {
     const headers = new Headers(options.headers);
     headers.set("content-type", "application/json");
-    headers.set("x-internal-service-token", this.envConfig.internalServiceToken);
+    headers.set(
+      "x-internal-service-token",
+      this.envConfig.internalServiceToken,
+    );
     if (userId) headers.set("x-authenticated-user-id", userId);
 
     const startedAt = Date.now();

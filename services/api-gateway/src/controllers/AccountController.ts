@@ -3,36 +3,38 @@ import AccountServiceClient from "../services/AccountServiceClient";
 import type { AuthenticatedRequest } from "../types";
 
 class AccountController {
-  private static readonly accountServiceClient = AccountServiceClient;
+  private readonly accountServiceClient = AccountServiceClient;
 
-  public static async create(
+  public readonly create = async (
     req: AuthenticatedRequest,
     res: Response,
-  ): Promise<Response> {
+  ): Promise<Response> => {
     const result = await this.accountServiceClient.create(
       req.authenticatedUser?.userId || "",
       req.body,
     );
     return res.status(result.status).json(result.body);
-  }
-  public static async list(
+  };
+
+  public readonly list = async (
     req: AuthenticatedRequest,
     res: Response,
-  ): Promise<Response> {
+  ): Promise<Response> => {
     const result = await this.accountServiceClient.list(
       req.authenticatedUser?.userId || "",
     );
     return res.status(result.status).json(result.body);
-  }
-  public static async get(
+  };
+
+  public readonly get = async (
     req: AuthenticatedRequest,
     res: Response,
-  ): Promise<Response> {
+  ): Promise<Response> => {
     const result = await this.accountServiceClient.get(
       req.authenticatedUser?.userId || "",
       String(req.params.accountId || ""),
     );
     return res.status(result.status).json(result.body);
-  }
+  };
 }
-export default AccountController;
+export default new AccountController();

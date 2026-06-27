@@ -16,17 +16,13 @@ class TokenService {
     return token;
   }
   public static issue(user: AuthenticatedUser): string {
-    return jwt.sign(
-      { email: user.email },
-      this.envConfig.jwtSecret,
-      {
-        algorithm: "HS256",
-        subject: user.userId,
-        issuer: this.envConfig.jwtIssuer,
-        audience: this.envConfig.jwtAudience,
-        expiresIn: this.envConfig.jwtExpiresInSeconds,
-      },
-    );
+    return jwt.sign({ email: user.email }, this.envConfig.jwtSecret, {
+      algorithm: "HS256",
+      subject: user.userId,
+      issuer: this.envConfig.jwtIssuer,
+      audience: this.envConfig.jwtAudience,
+      expiresIn: this.envConfig.jwtExpiresInSeconds,
+    });
   }
 
   public static verify(token: string): AuthenticatedUser {
