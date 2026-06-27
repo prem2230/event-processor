@@ -11,10 +11,11 @@ class KafkaService {
     brokers: [envConfig.kafkaBroker],
   });
   private static readonly producer = KafkaService.kafka.producer();
+  private static readonly envConfig = envConfig;
 
   public static async connect(): Promise<void> {
     KafkaService.logger.info("Connecting Kafka producer", {
-      clientId: envConfig.kafkaClientId,
+      clientId: this.envConfig.kafkaClientId,
       broker: envConfig.kafkaBroker,
     });
 
@@ -22,7 +23,7 @@ class KafkaService {
     KafkaService.connected = true;
 
     KafkaService.logger.info("Kafka producer connected", {
-      clientId: envConfig.kafkaClientId,
+      clientId: this.envConfig.kafkaClientId,
     });
   }
 
@@ -36,13 +37,13 @@ class KafkaService {
     const startedAt = Date.now();
 
     KafkaService.logger.info("Sending Kafka event", {
-      topic: envConfig.kafkaTransactionCreatedTopic,
+      topic: this.envConfig.kafkaTransactionCreatedTopic,
       eventId: event.eventId,
       transactionId: event.data.transactionId,
     });
 
     await KafkaService.producer.send({
-      topic: envConfig.kafkaTransactionCreatedTopic,
+      topic: this.envConfig.kafkaTransactionCreatedTopic,
       messages: [
         {
           key: event.data.accountId,
@@ -52,7 +53,7 @@ class KafkaService {
     });
 
     KafkaService.logger.info("Kafka event acknowledged", {
-      topic: envConfig.kafkaTransactionCreatedTopic,
+      topic: this.envConfig.kafkaTransactionCreatedTopic,
       eventId: event.eventId,
       transactionId: event.data.transactionId,
       durationMs: Date.now() - startedAt,

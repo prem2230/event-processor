@@ -1,27 +1,39 @@
 import jwt, { type JwtPayload } from "jsonwebtoken";
 import envConfig from "../config/env";
-import type { AuthenticatedUser } from "../interfaces";
+import type { AuthenticatedUser, UserProfile } from "../interfaces";
+import Logger from "../utils/logger";
 
 class TokenService {
+  private static readonly logger = Logger;
+  private static readonly envConfig = envConfig;
+
+  public static issueToken(user: UserProfile): string {
+    const token = this.issue({
+      userId: user.userId,
+      email: user.email,
+    });
+    this.logger.info("Access token issued");
+    return token;
+  }
   public static issue(user: AuthenticatedUser): string {
     return jwt.sign(
       { email: user.email },
-      envConfig.jwtSecret,
+      this.envConfig.jwtSecret,
       {
         algorithm: "HS256",
         subject: user.userId,
-        issuer: envConfig.jwtIssuer,
-        audience: envConfig.jwtAudience,
-        expiresIn: envConfig.jwtExpiresInSeconds,
+        issuer: this.envConfig.jwtIssuer,
+        audience: this.envConfig.jwtAudience,
+        expiresIn: this.envConfig.jwtExpiresInSeconds,
       },
     );
   }
 
   public static verify(token: string): AuthenticatedUser {
-    const payload = jwt.verify(token, envConfig.jwtSecret, {
+    const payload = jwt.verify(token, this.envConfig.jwtSecret, {
       algorithms: ["HS256"],
-      issuer: envConfig.jwtIssuer,
-      audience: envConfig.jwtAudience,
+      issuer: this.envConfig.jwtIssuer,
+      audience: this.envConfig.jwtAudience,
     }) as JwtPayload;
 
     if (!payload.sub || typeof payload.email !== "string") {

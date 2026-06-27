@@ -3,3 +3,7 @@ export * from "./CreateTransactionRequest";
 export * from "./TransactionInitiateResponse";
 export * from "./Auth";
 export * from "./CreateTransactionHttpRequest";
+export * from "./UserProfile";
+export * from "./Account";
+export * from "./Health";
+export * from "./ServiceResponse";

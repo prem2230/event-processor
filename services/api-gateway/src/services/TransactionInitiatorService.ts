@@ -10,8 +10,9 @@ import envConfig from "../config/env";
 
 class TransactionInitiatorService {
   private static readonly logger = Logger;
+  private static readonly envConfig = envConfig;
   private static readonly transactionCreatedTopic =
-    envConfig.kafkaTransactionCreatedTopic;
+    this.envConfig.kafkaTransactionCreatedTopic;
   private static readonly buildTransactionEvents = BuildTransactionEvents;
   private static readonly kafkaService = KafkaService;
 
@@ -25,7 +26,7 @@ class TransactionInitiatorService {
     error: unknown,
     res: Response,
   ): Response {
-    TransactionInitiatorService.logger.error(
+    this.logger.error(
       "Failed to publish transaction event",
       {
         error: error instanceof Error ? error.message : String(error),
@@ -41,9 +42,9 @@ class TransactionInitiatorService {
     data: CreateTransactionRequest,
   ): Promise<TransactionInitiationResponse> {
     const validationError =
-      TransactionInitiatorService.validateCreateTransactionRequest(data);
+      this.validateCreateTransactionRequest(data);
     if (validationError) {
-      TransactionInitiatorService.logger.warn(
+      this.logger.warn(
         "Create transaction request validation failed",
         {
           validationError,
@@ -61,25 +62,25 @@ class TransactionInitiatorService {
       };
     }
     const event =
-      TransactionInitiatorService.buildTransactionEvents.buildTransactionCreatedEvent(
+      this.buildTransactionEvents.buildTransactionCreatedEvent(
         data,
       );
 
-    TransactionInitiatorService.logger.info("Publishing transaction event", {
-      topic: TransactionInitiatorService.transactionCreatedTopic,
+    this.logger.info("Publishing transaction event", {
+      topic: this.transactionCreatedTopic,
       eventId: event.eventId,
       transactionId: event.data.transactionId,
       transactionType: event.data.type,
     });
 
-    await TransactionInitiatorService.kafkaService.publishTransactionCreated(
+    await this.kafkaService.publishTransactionCreated(
       event,
     );
 
-    TransactionInitiatorService.logger.info("Transaction event published", {
+    this.logger.info("Transaction event published", {
       eventId: event.eventId,
       transactionId: event.data.transactionId,
-      topic: TransactionInitiatorService.transactionCreatedTopic,
+      topic: this.transactionCreatedTopic,
     });
 
     return {
@@ -97,7 +98,7 @@ class TransactionInitiatorService {
     const { userId, accountId, type, amount } = data;
 
     if (!userId || !accountId || !type || typeof amount !== "number") {
-      TransactionInitiatorService.logger.warn(
+      this.logger.warn(
         "Invalid create transaction request",
         {
           hasUserId: Boolean(userId),
@@ -110,12 +111,12 @@ class TransactionInitiatorService {
     }
 
     if (!["CREDIT", "DEBIT"].includes(type)) {
-      TransactionInitiatorService.logger.warn("Invalid transaction type");
+      this.logger.warn("Invalid transaction type");
       return "type must be CREDIT or DEBIT";
     }
 
     if (amount <= 0) {
-      TransactionInitiatorService.logger.warn("Invalid transaction amount");
+      this.logger.warn("Invalid transaction amount");
       return "amount must be greater than 0";
     }
 

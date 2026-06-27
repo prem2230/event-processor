@@ -18,11 +18,11 @@ class HealthController {
     _req: Request,
     res: Response,
   ): Promise<Response> {
-    const readiness = await HealthController.healthService.getReadiness();
+    const readiness = await this.healthService.getReadiness();
     const statusCode = readiness.ready ? 200 : 503;
 
     if (!readiness.ready) {
-      HealthController.logger.warn("Readiness check failed", {
+      this.logger.warn("Readiness check failed", {
         checks: readiness.checks,
       });
     }

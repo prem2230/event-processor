@@ -1,14 +1,6 @@
 import envConfig from "../config/env";
-import type { LoginRequest, RegisterUserRequest } from "../interfaces";
+import type { LoginRequest, RegisterUserRequest, UserProfile } from "../interfaces";
 import ServiceClient from "./ServiceClient";
-
-export interface UserProfile {
-  userId: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  status: string;
-}
 
 class UserServiceClient {
   public static register(data: RegisterUserRequest) {

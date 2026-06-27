@@ -39,10 +39,10 @@ class EnvConfig {
     Number(process.env.UPSTREAM_TIMEOUT_MS) || 3000;
 
   public static validateProductionSecrets(): void {
-    if (EnvConfig.nodeEnv !== "production") return;
+    if (this.nodeEnv !== "production") return;
     if (
-      EnvConfig.jwtSecret.includes("replace-this") ||
-      EnvConfig.internalServiceToken === "local-internal-service-token"
+      this.jwtSecret.includes("replace-this") ||
+      this.internalServiceToken === "local-internal-service-token"
     ) {
       throw new Error("Production authentication secrets are not configured");
     }

@@ -3,11 +3,13 @@ import AccountServiceClient from "../services/AccountServiceClient";
 import type { AuthenticatedRequest } from "../types";
 
 class AccountController {
+  private static readonly accountServiceClient = AccountServiceClient;
+
   public static async create(
     req: AuthenticatedRequest,
     res: Response,
   ): Promise<Response> {
-    const result = await AccountServiceClient.create(
+    const result = await this.accountServiceClient.create(
       req.authenticatedUser?.userId || "",
       req.body,
     );
@@ -17,7 +19,7 @@ class AccountController {
     req: AuthenticatedRequest,
     res: Response,
   ): Promise<Response> {
-    const result = await AccountServiceClient.list(
+    const result = await this.accountServiceClient.list(
       req.authenticatedUser?.userId || "",
     );
     return res.status(result.status).json(result.body);
@@ -26,7 +28,7 @@ class AccountController {
     req: AuthenticatedRequest,
     res: Response,
   ): Promise<Response> {
-    const result = await AccountServiceClient.get(
+    const result = await this.accountServiceClient.get(
       req.authenticatedUser?.userId || "",
       String(req.params.accountId || ""),
     );

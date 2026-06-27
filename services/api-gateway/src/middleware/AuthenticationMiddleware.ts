@@ -4,6 +4,9 @@ import TokenService from "../services/TokenService";
 import Logger from "../utils/logger";
 
 class AuthenticationMiddleware {
+  private static readonly logger = Logger;
+  private static readonly tokenService = TokenService;
+
   public static validate(
     req: AuthenticatedRequest,
     res: Response,
@@ -18,10 +21,10 @@ class AuthenticationMiddleware {
     }
 
     try {
-      req.authenticatedUser = TokenService.verify(token);
+      req.authenticatedUser = this.tokenService.verify(token);
       next();
     } catch {
-      Logger.warn("JWT validation failed", {
+      this.logger.warn("JWT validation failed", {
         method: req.method,
         path: req.path,
       });

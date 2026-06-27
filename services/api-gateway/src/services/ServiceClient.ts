@@ -1,12 +1,11 @@
 import envConfig from "../config/env";
+import { ServiceResponse } from "../interfaces";
 import Logger from "../utils/logger";
 
-interface ServiceResponse<T> {
-  status: number;
-  body: T;
-}
-
 class ServiceClient {
+  private static readonly envConfig = envConfig;
+  private static readonly logger = Logger;
+
   public static async request<T>(
     baseUrl: string,
     path: string,
@@ -15,7 +14,7 @@ class ServiceClient {
   ): Promise<ServiceResponse<T>> {
     const headers = new Headers(options.headers);
     headers.set("content-type", "application/json");
-    headers.set("x-internal-service-token", envConfig.internalServiceToken);
+    headers.set("x-internal-service-token", this.envConfig.internalServiceToken);
     if (userId) headers.set("x-authenticated-user-id", userId);
 
     const startedAt = Date.now();
@@ -23,10 +22,10 @@ class ServiceClient {
       const response = await fetch(`${baseUrl}${path}`, {
         ...options,
         headers,
-        signal: AbortSignal.timeout(envConfig.upstreamTimeoutMs),
+        signal: AbortSignal.timeout(this.envConfig.upstreamTimeoutMs),
       });
       const body = (await response.json()) as T;
-      Logger.info("Upstream request completed", {
+      this.logger.info("Upstream request completed", {
         upstream: new URL(baseUrl).host,
         path,
         statusCode: response.status,
@@ -34,7 +33,7 @@ class ServiceClient {
       });
       return { status: response.status, body };
     } catch (error) {
-      Logger.error("Upstream request failed", {
+      this.logger.error("Upstream request failed", {
         upstream: new URL(baseUrl).host,
         path,
         durationMs: Date.now() - startedAt,

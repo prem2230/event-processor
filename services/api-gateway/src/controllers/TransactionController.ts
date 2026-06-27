@@ -8,6 +8,7 @@ import Logger from "../utils/logger";
 class TransactionController {
   private static readonly logger = Logger;
   private static transactionInitiatorService = TransactionInitiatorService;
+  private static accountServiceClient = AccountServiceClient;
 
   public static async createTransaction(
     req: AuthenticatedRequest &
@@ -17,7 +18,7 @@ class TransactionController {
     const startedAt = Date.now();
 
     try {
-      const account = await AccountServiceClient.get(
+      const account = await this.accountServiceClient.get(
         req.authenticatedUser?.userId || "",
         req.body.accountId,
       );
@@ -26,19 +27,19 @@ class TransactionController {
       }
 
       const data = {
-        ...TransactionInitiatorService.getCreateTransactionRequest(req),
+        ...this.transactionInitiatorService.getCreateTransactionRequest(req),
         userId: req.authenticatedUser?.userId || "",
       };
-      TransactionController.logger.info("Received create transaction request", {
+      this.logger.info("Received create transaction request", {
         method: req.method,
         path: req.path,
       });
       const result =
-        await TransactionController.transactionInitiatorService.initiateTransaction(
+        await this.transactionInitiatorService.initiateTransaction(
           data,
         );
 
-      TransactionController.logger.info("Create transaction request completed", {
+      this.logger.info("Create transaction request completed", {
         method: req.method,
         path: req.path,
         statusCode: result.statusCode,
@@ -47,13 +48,13 @@ class TransactionController {
 
       return res.status(result.statusCode).json(result.body);
     } catch (error) {
-      TransactionController.logger.error("Create transaction request failed", {
+      this.logger.error("Create transaction request failed", {
         method: req.method,
         path: req.path,
         durationMs: Date.now() - startedAt,
         error: error instanceof Error ? error.message : String(error),
       });
-      return TransactionInitiatorService.handleCreateTransactionError(
+      return this.transactionInitiatorService.handleCreateTransactionError(
         error,
         res,
       );

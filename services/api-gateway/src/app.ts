@@ -26,7 +26,7 @@ class ApiGatewayApp {
   }
 
   private registerRoutes(): void {
-    this.app.use(HealthRoutes);
+    // this.app.use(HealthRoutes);
     this.app.use("/v1/api", HealthRoutes);
     this.app.use("/v1/api", AuthRoutes);
     this.app.use("/v1/api", UserRoutes);
