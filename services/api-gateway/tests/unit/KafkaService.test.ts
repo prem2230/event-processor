@@ -57,7 +57,7 @@ describe("KafkaService", () => {
       },
     });
 
-    const sentRecord = producer.send.mock.calls[0]?.[0] as ProducerRecord;
+    const sentRecord = (producer.send as jest.Mock).mock.calls[0]?.[0] as unknown as ProducerRecord;
 
     expect(sentRecord.messages[0]?.key).toBe("acc-1");
     expect(sentRecord.messages[0]?.value).toContain('"eventId":"event-1"');

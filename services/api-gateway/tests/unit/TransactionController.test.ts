@@ -18,18 +18,20 @@ jest.mock("../../src/kafka/KafkaService", () => ({
 jest.mock("../../src/services/AccountServiceClient", () => ({
   __esModule: true,
   default: {
-    get: jest.fn().mockResolvedValue({
-      status: 200,
-      body: {
-        accountId: "acc-5001",
-        userId: "user-101",
-        type: "SAVINGS",
-        currency: "INR",
-        status: "ACTIVE",
-      },
-    }),
+    get: jest.fn() as jest.MockedFunction<(...args: any[]) => Promise<any>>,
   },
 }));
+
+(AccountServiceClient.get as jest.MockedFunction<(...args: any[]) => Promise<any>>).mockResolvedValue({
+  status: 200,
+  body: {
+    accountId: "acc-5001",
+    userId: "user-101",
+    type: "SAVINGS",
+    currency: "INR",
+    status: "ACTIVE",
+  },
+});
 
 function mockResponse(): Response {
   const res = {
@@ -148,7 +150,7 @@ describe("TransactionController", () => {
   });
 
   it("rejects transactions for an account not owned by the user", async () => {
-    jest.mocked(AccountServiceClient.get).mockResolvedValueOnce({
+    (AccountServiceClient.get as jest.MockedFunction<(...args: any[]) => Promise<any>>).mockResolvedValueOnce({
       status: 404,
       body: { message: "Account not found" },
     });
