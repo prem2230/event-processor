@@ -9,7 +9,9 @@ class EnvConfig {
     process.env.LOG_FORMAT ||
     (EnvConfig.nodeEnv === "development" ? "pretty" : "json")
   ).toLowerCase();
-  public static readonly logLevel = (process.env.LOG_LEVEL || "info").toLowerCase();
+  public static readonly logLevel = (
+    process.env.LOG_LEVEL || "info"
+  ).toLowerCase();
   public static readonly levelPriority = { error: 0, warn: 1, info: 2 };
   public static readonly port = Number(process.env.PORT) || 3004;
   public static readonly mongoUri =

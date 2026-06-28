@@ -17,7 +17,9 @@ class UserServiceServer {
   }
   private static listen(): Server {
     return app.listen(this.envConfig.port, () =>
-      this.logger.info("User Service HTTP server started", { port: envConfig.port }),
+      this.logger.info("User Service HTTP server started", {
+        port: envConfig.port,
+      }),
     );
   }
   public static handleStartupError(error: unknown): never {

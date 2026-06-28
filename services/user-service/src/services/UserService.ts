@@ -15,7 +15,9 @@ class UserService {
   private static readonly passwordService = PasswordService;
   private static readonly idGenerator = IdGenerator;
 
-  public static async register(data: RegisterUserRequest): Promise<UserProfile> {
+  public static async register(
+    data: RegisterUserRequest,
+  ): Promise<UserProfile> {
     this.validateRegistration(data);
     if (await this.userModel.findByEmail(data.email)) {
       throw new Error("EMAIL_ALREADY_REGISTERED");

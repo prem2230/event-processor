@@ -1,4 +1,8 @@
-import { randomBytes, scrypt as scryptCallback, timingSafeEqual } from "node:crypto";
+import {
+  randomBytes,
+  scrypt as scryptCallback,
+  timingSafeEqual,
+} from "node:crypto";
 import { promisify } from "node:util";
 
 const scrypt = promisify(scryptCallback);
@@ -20,7 +24,9 @@ class PasswordService {
   ): Promise<boolean> {
     const supplied = (await scrypt(password, passwordSalt, 64)) as Buffer;
     const stored = Buffer.from(passwordHash, "hex");
-    return stored.length === supplied.length && timingSafeEqual(stored, supplied);
+    return (
+      stored.length === supplied.length && timingSafeEqual(stored, supplied)
+    );
   }
 }
 
