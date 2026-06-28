@@ -2,6 +2,8 @@ import type { Request, Response } from "express";
 import HealthService from "../services/HealthService";
 
 class HealthController {
+  private static readonly healthService = HealthService;
+
   public static liveness(_req: Request, res: Response): Response {
     return res.status(200).json({
       service: "account-service",
@@ -10,7 +12,7 @@ class HealthController {
     });
   }
   public static readiness(_req: Request, res: Response): Response {
-    const state = HealthService.getReadiness();
+    const state = this.healthService.getReadiness();
     return res.status(state.ready ? 200 : 503).json({
       service: "account-service",
       status: state.ready ? "ready" : "not_ready",

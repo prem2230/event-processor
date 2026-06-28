@@ -1,15 +1,5 @@
 import mongoose from "mongoose";
-import type { AccountStatus, AccountType } from "../interfaces";
-
-export interface AccountDocument {
-  accountId: string;
-  userId: string;
-  type: AccountType;
-  currency: string;
-  status: AccountStatus;
-  createdAt: Date;
-  updatedAt: Date;
-}
+import type { AccountDocument } from "../interfaces";
 
 const schema = new mongoose.Schema<AccountDocument>(
   {

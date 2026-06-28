@@ -1,9 +1,12 @@
 import { randomUUID } from "node:crypto";
-import type { AccountResponse, CreateAccountRequest } from "../interfaces";
-import AccountModel, { type AccountDocument } from "../models/AccountModel";
+import type { AccountDocument, AccountResponse, CreateAccountRequest } from "../interfaces";
+import AccountModel from "../models/AccountModel";
 import Logger from "../utils/logger";
 
 class AccountService {
+  private static readonly logger = Logger;
+  private static readonly accountModel = AccountModel;
+
   public static async create(
     userId: string,
     data: CreateAccountRequest,
@@ -11,22 +14,22 @@ class AccountService {
     if (!["CURRENT", "SAVINGS"].includes(data.type)) {
       throw new Error("INVALID_ACCOUNT_TYPE");
     }
-    const account = await AccountModel.create({
+    const account = await this.accountModel.create({
       accountId: randomUUID(),
       userId,
       type: data.type,
       currency: (data.currency || "INR").toUpperCase(),
       status: "ACTIVE",
     });
-    Logger.info("Account created", {
+    this.logger.info("Account created", {
       accountType: account.type,
     });
-    return AccountService.toResponse(account);
+    return this.toResponse(account);
   }
 
   public static async list(userId: string): Promise<AccountResponse[]> {
-    return (await AccountModel.findByUserId(userId)).map(
-      AccountService.toResponse,
+    return (await this.accountModel.findByUserId(userId)).map(
+      this.toResponse,
     );
   }
 
@@ -34,8 +37,8 @@ class AccountService {
     accountId: string,
     userId: string,
   ): Promise<AccountResponse | null> {
-    const account = await AccountModel.findOwnedAccount(accountId, userId);
-    return account ? AccountService.toResponse(account) : null;
+    const account = await this.accountModel.findOwnedAccount(accountId, userId);
+    return account ? this.toResponse(account) : null;
   }
 
   private static toResponse(account: AccountDocument): AccountResponse {

@@ -5,19 +5,23 @@ import MongoConnection from "./config/mongo";
 import Logger from "./utils/logger";
 
 class AccountServiceServer {
+  private static readonly logger = Logger;
+  private static readonly envConfig = envConfig;
+  private static readonly mongoConnection = MongoConnection;
+
   public static async start(): Promise<void> {
-    envConfig.validateProductionSecrets();
+    this.envConfig.validateProductionSecrets();
     AccountServiceServer.listen();
-    await MongoConnection.connect();
-    Logger.info("Account Service started");
+    await this.mongoConnection.connect();
+    this.logger.info("Account Service started");
   }
   private static listen(): Server {
-    return app.listen(envConfig.port, () =>
-      Logger.info("Account Service HTTP server started", { port: envConfig.port }),
+    return app.listen(this.envConfig.port, () =>
+      this.logger.info("Account Service HTTP server started", { port: this.envConfig.port }),
     );
   }
   public static handleStartupError(error: unknown): never {
-    Logger.error("Account Service failed to start", {
+    this.logger.error("Account Service failed to start", {
       error: error instanceof Error ? error.message : String(error),
     });
     process.exit(1);

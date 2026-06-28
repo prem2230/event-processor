@@ -14,3 +14,12 @@ export interface AccountResponse {
   status: AccountStatus;
   createdAt: Date;
 }
+export interface AccountDocument {
+  accountId: string;
+  userId: string;
+  type: AccountType;
+  currency: string;
+  status: AccountStatus;
+  createdAt: Date;
+  updatedAt: Date;
+}

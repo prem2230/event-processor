@@ -19,8 +19,8 @@ class EnvConfig {
 
   public static validateProductionSecrets(): void {
     if (
-      EnvConfig.nodeEnv === "production" &&
-      EnvConfig.internalServiceToken === "local-internal-service-token"
+      this.nodeEnv === "production" &&
+      this.internalServiceToken === "local-internal-service-token"
     ) {
       throw new Error("Production internal service token is not configured");
     }
