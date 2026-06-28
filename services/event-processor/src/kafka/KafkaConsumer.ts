@@ -1,50 +1,51 @@
 import { Kafka, type KafkaMessage } from "kafkajs";
 import envConfig from "../config/env";
-import type { TransactionCreatedEvent } from "../interfaces";
-import TransactionProcessor from "../processors/TransactionProcessor";
+import TransactionProcessor from "../services/TransactionProcessorService";
+import type { TransactionCreatedEvent } from "../interfaces/TransactionCreatedEvent";
 import Logger from "../utils/logger";
 
 class KafkaConsumer {
   private static readonly logger = Logger;
   private static running = false;
+  private static readonly envConfig = envConfig;
   private static readonly transactionCreatedTopic =
-    envConfig.kafkaTransactionCreatedTopic;
+    this.envConfig.kafkaTransactionCreatedTopic;
   private static readonly transactionProcessor = TransactionProcessor;
   private static readonly kafka = new Kafka({
-    clientId: envConfig.kafkaClientId,
-    brokers: [envConfig.kafkaBroker],
+    clientId: this.envConfig.kafkaClientId,
+    brokers: [this.envConfig.kafkaBroker],
   });
   private static readonly consumer = KafkaConsumer.kafka.consumer({
-    groupId: envConfig.kafkaGroupId,
+    groupId: this.envConfig.kafkaGroupId,
   });
 
   public static async start(): Promise<void> {
-    KafkaConsumer.logger.info("Connecting Kafka consumer", {
-      clientId: envConfig.kafkaClientId,
-      groupId: envConfig.kafkaGroupId,
-      broker: envConfig.kafkaBroker,
+    this.logger.info("Connecting Kafka consumer", {
+      clientId: this.envConfig.kafkaClientId,
+      groupId: this.envConfig.kafkaGroupId,
+      broker: this.envConfig.kafkaBroker,
     });
 
-    await KafkaConsumer.consumer.connect();
-    await KafkaConsumer.consumer.subscribe({
-      topic: KafkaConsumer.transactionCreatedTopic,
+    await this.consumer.connect();
+    await this.consumer.subscribe({
+      topic: this.transactionCreatedTopic,
       fromBeginning: false,
     });
-    await KafkaConsumer.consumer.run({
+    await this.consumer.run({
       eachMessage: async ({ topic, partition, message }) => {
-        await KafkaConsumer.handleMessage(topic, partition, message);
+        await this.handleMessage(topic, partition, message);
       },
     });
     KafkaConsumer.running = true;
 
-    KafkaConsumer.logger.info("Kafka consumer started", {
-      topic: KafkaConsumer.transactionCreatedTopic,
-      groupId: envConfig.kafkaGroupId,
+    this.logger.info("Kafka consumer started", {
+      topic: this.transactionCreatedTopic,
+      groupId: this.envConfig.kafkaGroupId,
     });
   }
 
   public static isReady(): boolean {
-    return KafkaConsumer.running;
+    return this.running;
   }
 
   private static async handleMessage(
@@ -66,7 +67,7 @@ class KafkaConsumer {
     try {
       event = JSON.parse(message.value.toString()) as TransactionCreatedEvent;
     } catch (error) {
-      KafkaConsumer.logger.error("Failed to parse Kafka event", {
+      this.logger.error("Failed to parse Kafka event", {
         topic,
         partition,
         offset: message.offset,
@@ -75,7 +76,7 @@ class KafkaConsumer {
       throw error;
     }
 
-    KafkaConsumer.logger.info("Kafka event received", {
+    this.logger.info("Kafka event received", {
       topic,
       partition,
       offset: message.offset,
@@ -84,7 +85,7 @@ class KafkaConsumer {
       eventType: event.eventType,
     });
 
-    await KafkaConsumer.transactionProcessor.process(event);
+    await this.transactionProcessor.process(event);
   }
 }
 

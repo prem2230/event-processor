@@ -1,16 +1,5 @@
 import mongoose from "mongoose";
-import type { TransactionStatus, TransactionType } from "../types";
-
-interface TransactionDocument {
-  transactionId: string;
-  eventId: string;
-  userId: string;
-  accountId: string;
-  type: TransactionType;
-  amount: number;
-  status: TransactionStatus;
-  processedAt: Date;
-}
+import { TransactionDocument } from "../interfaces";
 
 const transactionSchema = new mongoose.Schema<TransactionDocument>(
   {

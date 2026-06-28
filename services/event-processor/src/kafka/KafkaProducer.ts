@@ -6,47 +6,48 @@ import Logger from "../utils/logger";
 
 class KafkaProducer {
   private static readonly logger = Logger;
+  private static readonly envConfig = envConfig;
   private static connected = false;
   private static readonly notificationCreatedTopic =
-    envConfig.kafkaNotificationCreatedTopic;
+    this.envConfig.kafkaNotificationCreatedTopic;
   private static readonly kafka = new Kafka({
-    clientId: `${envConfig.kafkaClientId}-producer`,
-    brokers: [envConfig.kafkaBroker],
+    clientId: `${this.envConfig.kafkaClientId}-producer`,
+    brokers: [this.envConfig.kafkaBroker],
   });
-  private static readonly producer = KafkaProducer.kafka.producer({
+  private static readonly producer = this.kafka.producer({
     createPartitioner: Partitioners.LegacyPartitioner,
   });
 
   public static async connect(): Promise<void> {
-    KafkaProducer.logger.info("Connecting Kafka producer", {
-      clientId: `${envConfig.kafkaClientId}-producer`,
-      broker: envConfig.kafkaBroker,
+    this.logger.info("Connecting Kafka producer", {
+      clientId: `${this.envConfig.kafkaClientId}-producer`,
+      broker: this.envConfig.kafkaBroker,
     });
 
-    await KafkaProducer.producer.connect();
-    KafkaProducer.connected = true;
+    await this.producer.connect();
+    this.connected = true;
 
-    KafkaProducer.logger.info("Kafka producer connected");
+    this.logger.info("Kafka producer connected");
   }
 
   public static isReady(): boolean {
-    return KafkaProducer.connected;
+    return this.connected;
   }
 
   public static async publishNotificationCreated(
     data: NotificationCreatedEvent["data"],
   ): Promise<void> {
     const startedAt = Date.now();
-    const event = KafkaProducer.buildNotificationCreatedEvent(data);
+    const event = this.buildNotificationCreatedEvent(data);
 
-    KafkaProducer.logger.info("Publishing notification event", {
-      topic: KafkaProducer.notificationCreatedTopic,
+    this.logger.info("Publishing notification event", {
+      topic: this.notificationCreatedTopic,
       eventId: event.eventId,
       transactionId: data.transactionId,
     });
 
-    await KafkaProducer.producer.send({
-      topic: KafkaProducer.notificationCreatedTopic,
+    await this.producer.send({
+      topic: this.notificationCreatedTopic,
       messages: [
         {
           key: data.userId,
@@ -55,10 +56,10 @@ class KafkaProducer {
       ],
     });
 
-    KafkaProducer.logger.info("Notification event published", {
+    this.logger.info("Notification event published", {
       eventId: event.eventId,
       transactionId: data.transactionId,
-      topic: KafkaProducer.notificationCreatedTopic,
+      topic: this.notificationCreatedTopic,
       durationMs: Date.now() - startedAt,
     });
   }
