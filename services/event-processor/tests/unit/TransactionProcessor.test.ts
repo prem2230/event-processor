@@ -2,7 +2,7 @@ import RedisService from "../../src/config/redisClient";
 import type { TransactionCreatedEvent } from "../../src/interfaces";
 import KafkaProducer from "../../src/kafka/KafkaProducer";
 import TransactionModel from "../../src/models/TransactionModel";
-import TransactionProcessor from "../../src/processors/TransactionProcessor";
+import TransactionProcessor from "../../src/services/TransactionProcessorService";
 
 jest.mock("../../src/config/redisClient", () => ({
   __esModule: true,
@@ -91,6 +91,18 @@ describe("TransactionProcessor", () => {
         amount: 1500,
       },
     });
+
+    expect(RedisService.set).toHaveBeenCalledWith(
+      "account:acc-5001:balance",
+      "2500",
+    );
+  });
+
+  it("defaults a missing cached balance to zero", async () => {
+    jest.mocked(TransactionModel.findByTransactionId).mockResolvedValue(null);
+    jest.mocked(RedisService.get).mockResolvedValue(null);
+
+    await TransactionProcessor.process(transactionEvent);
 
     expect(RedisService.set).toHaveBeenCalledWith(
       "account:acc-5001:balance",
