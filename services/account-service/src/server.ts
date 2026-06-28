@@ -17,7 +17,9 @@ class AccountServiceServer {
   }
   private static listen(): Server {
     return app.listen(this.envConfig.port, () =>
-      this.logger.info("Account Service HTTP server started", { port: this.envConfig.port }),
+      this.logger.info("Account Service HTTP server started", {
+        port: this.envConfig.port,
+      }),
     );
   }
   public static handleStartupError(error: unknown): never {
@@ -27,5 +29,7 @@ class AccountServiceServer {
     process.exit(1);
   }
 }
-void AccountServiceServer.start().catch(AccountServiceServer.handleStartupError);
+void AccountServiceServer.start().catch(
+  AccountServiceServer.handleStartupError,
+);
 export default AccountServiceServer;

@@ -1,5 +1,9 @@
 import { randomUUID } from "node:crypto";
-import type { AccountDocument, AccountResponse, CreateAccountRequest } from "../interfaces";
+import type {
+  AccountDocument,
+  AccountResponse,
+  CreateAccountRequest,
+} from "../interfaces";
 import AccountModel from "../models/AccountModel";
 import Logger from "../utils/logger";
 
@@ -28,9 +32,7 @@ class AccountService {
   }
 
   public static async list(userId: string): Promise<AccountResponse[]> {
-    return (await this.accountModel.findByUserId(userId)).map(
-      this.toResponse,
-    );
+    return (await this.accountModel.findByUserId(userId)).map(this.toResponse);
   }
 
   public static async get(

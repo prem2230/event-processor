@@ -21,7 +21,8 @@ class Logger {
     if (
       Logger.priorities[level] >
       (Logger.priorities[envConfig.logLevel as LogLevel] ?? 2)
-    ) return;
+    )
+      return;
     const payload = {
       timestamp: new Date().toISOString(),
       service: Logger.service,
