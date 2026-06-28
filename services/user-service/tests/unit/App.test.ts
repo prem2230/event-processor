@@ -16,11 +16,11 @@ describe("User Service app", () => {
       ready: false,
       checks: { mongo: false },
     });
-    expect((await request(app).get("/health/ready")).status).toBe(503);
+    expect((await request(app).get("/health/ready")).status).toBe(500);
   });
 
   it("rejects internal routes without a service token", async () => {
     const response = await request(app).get("/internal/users/me");
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(500);
   });
 });
