@@ -1,12 +1,13 @@
-import { randomUUID } from "node:crypto";
 import { Kafka, Partitioners } from "kafkajs";
 import envConfig from "../config/env";
 import type { NotificationCreatedEvent } from "../interfaces";
 import Logger from "../utils/logger";
+import idGenerator from "../utils/idGenerator";
 
 class KafkaProducer {
   private static readonly logger = Logger;
   private static readonly envConfig = envConfig;
+  private static readonly idGenerator = idGenerator;
   private static connected = false;
   private static readonly notificationCreatedTopic =
     this.envConfig.kafkaNotificationCreatedTopic;
@@ -68,7 +69,7 @@ class KafkaProducer {
     data: NotificationCreatedEvent["data"],
   ): NotificationCreatedEvent {
     return {
-      eventId: randomUUID(),
+      eventId: this.idGenerator.generateId(),
       eventType: "notification.created",
       occurredAt: new Date().toISOString(),
       data,

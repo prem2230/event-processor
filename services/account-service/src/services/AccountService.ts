@@ -1,15 +1,16 @@
-import { randomUUID } from "node:crypto";
 import type {
   AccountDocument,
   AccountResponse,
   CreateAccountRequest,
 } from "../interfaces";
 import AccountModel from "../models/AccountModel";
+import IdGenerator from "../utils/idGenerator";
 import Logger from "../utils/logger";
 
 class AccountService {
   private static readonly logger = Logger;
   private static readonly accountModel = AccountModel;
+  private static readonly idGenerator = IdGenerator;
 
   public static async create(
     userId: string,
@@ -19,7 +20,7 @@ class AccountService {
       throw new Error("INVALID_ACCOUNT_TYPE");
     }
     const account = await this.accountModel.create({
-      accountId: randomUUID(),
+      accountId: this.idGenerator.generateId(),
       userId,
       type: data.type,
       currency: (data.currency || "INR").toUpperCase(),

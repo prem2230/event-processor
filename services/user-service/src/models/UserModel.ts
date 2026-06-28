@@ -1,16 +1,5 @@
 import mongoose from "mongoose";
-
-export interface UserDocument {
-  userId: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  passwordHash: string;
-  passwordSalt: string;
-  status: "ACTIVE" | "LOCKED";
-  createdAt: Date;
-  updatedAt: Date;
-}
+import { UserDocument } from "../interfaces";
 
 const schema = new mongoose.Schema<UserDocument>(
   {

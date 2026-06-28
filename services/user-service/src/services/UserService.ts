@@ -1,23 +1,29 @@
-import { randomUUID } from "node:crypto";
 import type {
   RegisterUserRequest,
+  UserDocument,
   UserProfile,
   VerifyCredentialsRequest,
 } from "../interfaces";
-import UserModel, { type UserDocument } from "../models/UserModel";
+import UserModel from "../models/UserModel";
+import IdGenerator from "../utils/idGenerator";
 import Logger from "../utils/logger";
 import PasswordService from "./PasswordService";
 
 class UserService {
+  private static readonly logger = Logger;
+  private static readonly userModel = UserModel;
+  private static readonly passwordService = PasswordService;
+  private static readonly idGenerator = IdGenerator;
+
   public static async register(data: RegisterUserRequest): Promise<UserProfile> {
-    UserService.validateRegistration(data);
-    if (await UserModel.findByEmail(data.email)) {
+    this.validateRegistration(data);
+    if (await this.userModel.findByEmail(data.email)) {
       throw new Error("EMAIL_ALREADY_REGISTERED");
     }
 
-    const password = await PasswordService.hash(data.password);
-    const user = await UserModel.create({
-      userId: randomUUID(),
+    const password = await this.passwordService.hash(data.password);
+    const user = await this.userModel.create({
+      userId: this.idGenerator.generateId(),
       email: data.email.toLowerCase().trim(),
       firstName: data.firstName.trim(),
       lastName: data.lastName.trim(),
@@ -25,28 +31,28 @@ class UserService {
       status: "ACTIVE",
     });
 
-    Logger.info("User registered");
-    return UserService.toProfile(user);
+    this.logger.info("User registered");
+    return this.toProfile(user);
   }
 
   public static async verifyCredentials(
     data: VerifyCredentialsRequest,
   ): Promise<UserProfile | null> {
-    const user = await UserModel.findByEmail(data.email);
+    const user = await this.userModel.findByEmail(data.email);
     if (!user || user.status !== "ACTIVE") return null;
 
-    const valid = await PasswordService.verify(
+    const valid = await this.passwordService.verify(
       data.password,
       user.passwordHash,
       user.passwordSalt,
     );
-    Logger.info("Credential verification completed", { success: valid });
-    return valid ? UserService.toProfile(user) : null;
+    this.logger.info("Credential verification completed", { success: valid });
+    return valid ? this.toProfile(user) : null;
   }
 
   public static async getProfile(userId: string): Promise<UserProfile | null> {
-    const user = await UserModel.findByUserId(userId);
-    return user ? UserService.toProfile(user) : null;
+    const user = await this.userModel.findByUserId(userId);
+    return user ? this.toProfile(user) : null;
   }
 
   private static validateRegistration(data: RegisterUserRequest): void {

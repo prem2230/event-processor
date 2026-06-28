@@ -3,12 +3,14 @@ import type { RegisterUserRequest, VerifyCredentialsRequest } from "../interface
 import UserService from "../services/UserService";
 
 class UserController {
+  private static readonly userService = UserService;
+
   public static async register(
     req: Request<unknown, unknown, RegisterUserRequest>,
     res: Response,
   ): Promise<Response> {
     try {
-      return res.status(201).json(await UserService.register(req.body));
+      return res.status(201).json(await this.userService.register(req.body));
     } catch (error) {
       const code = error instanceof Error ? error.message : "REGISTRATION_FAILED";
       const status = code === "EMAIL_ALREADY_REGISTERED" ? 409 : 400;
@@ -20,7 +22,7 @@ class UserController {
     req: Request<unknown, unknown, VerifyCredentialsRequest>,
     res: Response,
   ): Promise<Response> {
-    const profile = await UserService.verifyCredentials(req.body);
+    const profile = await this.userService.verifyCredentials(req.body);
     return profile
       ? res.status(200).json(profile)
       : res.status(401).json({ message: "Invalid credentials" });
@@ -28,7 +30,7 @@ class UserController {
 
   public static async getProfile(req: Request, res: Response): Promise<Response> {
     const userId = req.header("x-authenticated-user-id") || "";
-    const profile = await UserService.getProfile(userId);
+    const profile = await this.userService.getProfile(userId);
     return profile
       ? res.status(200).json(profile)
       : res.status(404).json({ message: "User not found" });

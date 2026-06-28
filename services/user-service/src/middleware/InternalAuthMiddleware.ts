@@ -3,9 +3,11 @@ import { timingSafeEqual } from "node:crypto";
 import envConfig from "../config/env";
 
 class InternalAuthMiddleware {
+  private static readonly envConfig = envConfig;
+
   public static validate(req: Request, res: Response, next: NextFunction): void {
     const supplied = req.header("x-internal-service-token") || "";
-    const expected = envConfig.internalServiceToken;
+    const expected = this.envConfig.internalServiceToken;
     const valid =
       supplied.length === expected.length &&
       timingSafeEqual(Buffer.from(supplied), Buffer.from(expected));
