@@ -122,12 +122,30 @@ The `INTERNAL_SERVICE_TOKEN` value must be identical in the API Gateway, User
 Service, and Account Service. For production, replace all placeholder secrets,
 including `JWT_SECRET`, with strong private values.
 
-## Run Locally
-
-Start infrastructure first:
+Docker Compose uses the root `.env` file. Copy the root example and replace the
+MongoDB URLs with your remote databases:
 
 ```bash
-docker compose up -d
+cp .env.example .env
+```
+
+## Run Locally
+
+Run the backend stack with Docker Compose:
+
+```bash
+docker compose up --build
+```
+
+This starts Redis, Kafka, creates the required Kafka topics, and runs all
+backend services. MongoDB is expected to be remote and configured through the
+root `.env` file. The frontend can still be run separately with `npm run dev`
+from the `frontend` directory.
+
+For manual backend development, start only shared infrastructure:
+
+```bash
+docker compose up -d redis kafka kafka-init
 ```
 
 Run API Gateway:
