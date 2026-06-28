@@ -1,6 +1,6 @@
 import type { Response } from "express";
 import type { NotificationCreatedEvent } from "../../src/interfaces";
-import SseManager from "../../src/sse/SseManager";
+import SseManager from "../../src/services/SseManagerService";
 
 function mockSseResponse() {
   let closeHandler: (() => void) | undefined;
@@ -49,7 +49,7 @@ describe("SseManager", () => {
     const event = notificationEvent("user-sse-1");
 
     SseManager.addClient("user-sse-1", res);
-    SseManager.sendNotification(event);
+    expect(SseManager.sendNotification(event)).toBe(1);
 
     expect(res.write).toHaveBeenCalledWith("event: notification\n");
     expect(res.write).toHaveBeenCalledWith(
@@ -77,8 +77,8 @@ describe("SseManager", () => {
   });
 
   it("does nothing when no clients are connected for a user", () => {
-    expect(() =>
-      SseManager.sendNotification(notificationEvent("unknown-user")),
-    ).not.toThrow();
+    expect(SseManager.sendNotification(notificationEvent("unknown-user"))).toBe(
+      0,
+    );
   });
 });
