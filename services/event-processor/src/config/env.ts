@@ -4,8 +4,7 @@ import dotenv from "dotenv";
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 class EnvConfig {
-  public static readonly nodeEnv =
-    process.env.NODE_ENV || "development";
+  public static readonly nodeEnv = process.env.NODE_ENV || "development";
   public static readonly logFormat = (
     process.env.LOG_FORMAT ||
     (EnvConfig.nodeEnv === "development" ? "pretty" : "json")

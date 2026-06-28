@@ -6,7 +6,7 @@ import KafkaProducer from "../kafka/KafkaProducer";
 
 class HealthService {
   private static readonly mongoConnection = MongoConnection;
-  private static readonly redisService = RedisService
+  private static readonly redisService = RedisService;
   private static readonly kafkaConsumer = KafkaConsumer;
   private static readonly kafkaProducer = KafkaProducer;
 
