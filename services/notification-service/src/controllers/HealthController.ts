@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import HealthService from "../services/HealthService";
-import SseManager from "../sse/SseManager";
+import SseManager from "../services/SseManagerService";
 import Logger from "../utils/logger";
 
 class NotificationController {
@@ -17,11 +17,11 @@ class NotificationController {
   }
 
   public static readiness(_req: Request, res: Response): Response {
-    const readiness = NotificationController.healthService.getReadiness();
+    const readiness = this.healthService.getReadiness();
     const statusCode = readiness.ready ? 200 : 503;
 
     if (!readiness.ready) {
-      NotificationController.logger.warn("Readiness check failed", {
+      this.logger.warn("Readiness check failed", {
         checks: readiness.checks,
       });
     }
@@ -31,7 +31,7 @@ class NotificationController {
       status: readiness.ready ? "ready" : "not_ready",
       checks: readiness.checks,
       connectedClients:
-        NotificationController.healthService.getConnectedClientCount(),
+        this.healthService.getConnectedClientCount(),
     });
   }
 
@@ -46,10 +46,10 @@ class NotificationController {
     res.write("event: connected\n");
     res.write(`data: ${JSON.stringify({ userId, message: "connected" })}\n\n`);
 
-    NotificationController.sseManager.addClient(userId, res);
-    NotificationController.logger.info("SSE subscription established", {
+    this.sseManager.addClient(userId, res);
+    this.logger.info("SSE subscription established", {
       connectedClients:
-        NotificationController.healthService.getConnectedClientCount(),
+        this.healthService.getConnectedClientCount(),
     });
   }
 }

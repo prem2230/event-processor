@@ -8,30 +8,30 @@ class SseManager {
 
   public static addClient(userId: string, res: Response): void {
     if (!SseManager.clients.has(userId)) {
-      SseManager.clients.set(userId, new Set());
+      this.clients.set(userId, new Set());
     }
 
-    SseManager.clients.get(userId)?.add(res);
-    SseManager.logger.info("SSE client connected", {
-      connectedClients: SseManager.getConnectedClientCount(),
+    this.clients.get(userId)?.add(res);
+    this.logger.info("SSE client connected", {
+      connectedClients: this.getConnectedClientCount(),
     });
 
     res.on("close", () => {
-      SseManager.clients.get(userId)?.delete(res);
-      if (SseManager.clients.get(userId)?.size === 0) {
-        SseManager.clients.delete(userId);
+      this.clients.get(userId)?.delete(res);
+      if (this.clients.get(userId)?.size === 0) {
+        this.clients.delete(userId);
       }
-      SseManager.logger.info("SSE client disconnected", {
-        connectedClients: SseManager.getConnectedClientCount(),
+      this.logger.info("SSE client disconnected", {
+        connectedClients: this.getConnectedClientCount(),
       });
     });
   }
 
   public static sendNotification(event: NotificationCreatedEvent): number {
-    const userClients = SseManager.clients.get(event.data.userId);
+    const userClients = this.clients.get(event.data.userId);
 
     if (!userClients) {
-      SseManager.logger.info("Notification has no active SSE recipients", {
+      this.logger.info("Notification has no active SSE recipients", {
         eventId: event.eventId,
         transactionId: event.data.transactionId,
       });
@@ -43,7 +43,7 @@ class SseManager {
       client.write(`data: ${JSON.stringify(event)}\n\n`);
     }
 
-    SseManager.logger.info("Notification delivered to SSE clients", {
+    this.logger.info("Notification delivered to SSE clients", {
       eventId: event.eventId,
       transactionId: event.data.transactionId,
       recipientConnections: userClients.size,
@@ -53,7 +53,7 @@ class SseManager {
   }
 
   public static getConnectedClientCount(): number {
-    return Array.from(SseManager.clients.values()).reduce(
+    return Array.from(this.clients.values()).reduce(
       (total, userClients) => total + userClients.size,
       0,
     );
