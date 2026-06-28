@@ -103,6 +103,25 @@ MongoDB:              localhost:27017
 Redis:                localhost:6379
 ```
 
+## Environment Files
+
+Each backend service loads environment variables from a service-local `.env`
+file. Copy the examples before running locally:
+
+```bash
+cp services/api-gateway/.env.example services/api-gateway/.env
+cp services/user-service/.env.example services/user-service/.env
+cp services/account-service/.env.example services/account-service/.env
+cp services/event-processor/.env.example services/event-processor/.env
+cp services/notification-service/.env.example services/notification-service/.env
+```
+
+On Windows PowerShell, use `Copy-Item` instead of `cp` if needed.
+
+The `INTERNAL_SERVICE_TOKEN` value must be identical in the API Gateway, User
+Service, and Account Service. For production, replace all placeholder secrets,
+including `JWT_SECRET`, with strong private values.
+
 ## Run Locally
 
 Start infrastructure first:
