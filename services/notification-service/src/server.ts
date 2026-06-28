@@ -21,25 +21,19 @@ class NotificationServiceServer {
   }
 
   private static listen(): Server {
-    return this.app.listen(
-      this.port,
-      () => {
-        this.logger.info("HTTP server started", {
-          port: this.port,
-          livenessPath: "/health/live",
-          readinessPath: "/health/ready",
-        });
-      },
-    );
+    return this.app.listen(this.port, () => {
+      this.logger.info("HTTP server started", {
+        port: this.port,
+        livenessPath: "/health/live",
+        readinessPath: "/health/ready",
+      });
+    });
   }
 
   public static handleStartupError(error: unknown): never {
-    this.logger.error(
-      "Notification Service failed to start",
-      {
-        error: error instanceof Error ? error.message : String(error),
-      },
-    );
+    this.logger.error("Notification Service failed to start", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     process.exit(1);
   }
 }

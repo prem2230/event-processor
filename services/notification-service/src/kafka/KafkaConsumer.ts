@@ -84,8 +84,7 @@ class KafkaConsumer {
       transactionId: event.data.transactionId,
     });
 
-    const recipientConnections =
-      this.sseManager.sendNotification(event);
+    const recipientConnections = this.sseManager.sendNotification(event);
     this.logger.info("Notification event handled", {
       eventId: event.eventId,
       transactionId: event.data.transactionId,

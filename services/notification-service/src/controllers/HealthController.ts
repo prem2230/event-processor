@@ -30,8 +30,7 @@ class NotificationController {
       service: "notification-service",
       status: readiness.ready ? "ready" : "not_ready",
       checks: readiness.checks,
-      connectedClients:
-        this.healthService.getConnectedClientCount(),
+      connectedClients: this.healthService.getConnectedClientCount(),
     });
   }
 
@@ -48,8 +47,7 @@ class NotificationController {
 
     this.sseManager.addClient(userId, res);
     this.logger.info("SSE subscription established", {
-      connectedClients:
-        this.healthService.getConnectedClientCount(),
+      connectedClients: this.healthService.getConnectedClientCount(),
     });
   }
 }

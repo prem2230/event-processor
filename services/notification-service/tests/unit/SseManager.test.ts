@@ -52,7 +52,9 @@ describe("SseManager", () => {
     SseManager.sendNotification(event);
 
     expect(res.write).toHaveBeenCalledWith("event: notification\n");
-    expect(res.write).toHaveBeenCalledWith(`data: ${JSON.stringify(event)}\n\n`);
+    expect(res.write).toHaveBeenCalledWith(
+      `data: ${JSON.stringify(event)}\n\n`,
+    );
   });
 
   it("tracks connected clients", () => {
