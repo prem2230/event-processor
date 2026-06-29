@@ -2,6 +2,7 @@ import MongoConnection from "../../src/config/mongo";
 import KafkaConsumer from "../../src/kafka/KafkaConsumer";
 import KafkaProducer from "../../src/kafka/KafkaProducer";
 import HealthService from "../../src/services/HealthService";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
 jest.mock("../../src/config/mongo", () => ({
   __esModule: true,
@@ -19,7 +20,9 @@ jest.mock("../../src/kafka/KafkaProducer", () => ({
 }));
 
 describe("HealthService", () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
   it("reports ready when every dependency is ready", () => {
     jest.mocked(MongoConnection.isReady).mockReturnValue(true);

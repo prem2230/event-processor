@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
+import { afterEach, describe, expect, it, jest } from "@jest/globals";
 
 describe("Logger", () => {
   const originalEnv = process.env;
@@ -11,9 +11,9 @@ describe("Logger", () => {
 
   it("writes pretty info, warn, and error logs", () => {
     process.env = { ...originalEnv, LOG_FORMAT: "pretty" };
-    const info = jest.spyOn(console, "info").mockImplementation();
-    const warn = jest.spyOn(console, "warn").mockImplementation();
-    const error = jest.spyOn(console, "error").mockImplementation();
+    const info = jest.spyOn(console, "info").mockImplementation(() => undefined);
+    const warn = jest.spyOn(console, "warn").mockImplementation(() => undefined);
+    const error = jest.spyOn(console, "error").mockImplementation(() => undefined);
 
     jest.isolateModules(() => {
       const Logger = require("../../src/utils/logger").default;
@@ -31,7 +31,7 @@ describe("Logger", () => {
 
   it("writes text logs with normalized object messages", () => {
     process.env = { ...originalEnv, LOG_FORMAT: "text" };
-    const info = jest.spyOn(console, "info").mockImplementation();
+    const info = jest.spyOn(console, "info").mockImplementation(() => undefined);
 
     jest.isolateModules(() => {
       const Logger = require("../../src/utils/logger").default;
@@ -46,7 +46,7 @@ describe("Logger", () => {
 
   it("writes JSON logs by default", () => {
     process.env = { ...originalEnv, LOG_FORMAT: "json" };
-    const info = jest.spyOn(console, "info").mockImplementation();
+    const info = jest.spyOn(console, "info").mockImplementation(() => undefined);
 
     jest.isolateModules(() => {
       const Logger = require("../../src/utils/logger").default;
@@ -58,7 +58,7 @@ describe("Logger", () => {
 
   it("falls back when payloads cannot be stringified", () => {
     process.env = { ...originalEnv, LOG_FORMAT: "json" };
-    const info = jest.spyOn(console, "info").mockImplementation();
+    const info = jest.spyOn(console, "info").mockImplementation(() => undefined);
     const circular: Record<string, unknown> = {};
     circular.self = circular;
 
@@ -72,7 +72,7 @@ describe("Logger", () => {
 
   it("filters logs below the configured level", () => {
     process.env = { ...originalEnv, LOG_LEVEL: "error" };
-    const info = jest.spyOn(console, "info").mockImplementation();
+    const info = jest.spyOn(console, "info").mockImplementation(() => undefined);
 
     jest.isolateModules(() => {
       const Logger = require("../../src/utils/logger").default;

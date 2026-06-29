@@ -1,6 +1,7 @@
 import type { Response } from "express";
 import type { NotificationCreatedEvent } from "../../src/interfaces";
 import SseManager from "../../src/services/SseManagerService";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
 function mockSseResponse() {
   let closeHandler: (() => void) | undefined;
@@ -11,9 +12,9 @@ function mockSseResponse() {
     write: jest.Mock;
   } = {
     write: jest.fn(),
-    on: jest.fn((event: string, handler: () => void): typeof res => {
-      if (event === "close") {
-        closeHandler = handler;
+    on: jest.fn().mockImplementation((event: unknown, handler: unknown): typeof res => {
+      if (event === "close" && typeof handler === "function") {
+        closeHandler = handler as () => void;
       }
       return res;
     }),

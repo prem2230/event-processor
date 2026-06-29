@@ -1,9 +1,12 @@
 import request from "supertest";
 import app from "../../src/app";
 import HealthService from "../../src/services/HealthService";
+import { afterEach, describe, expect, it, jest } from "@jest/globals";
 
 describe("User Service app", () => {
-  afterEach(() => jest.restoreAllMocks());
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
 
   it("reports liveness", async () => {
     const response = await request(app).get("/health/live");

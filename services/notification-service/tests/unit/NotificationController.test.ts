@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import NotificationController from "../../src/controllers/HealthController";
 import HealthService from "../../src/services/HealthService";
 import SseManager from "../../src/services/SseManagerService";
+import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
 
 jest.mock("../../src/services/SseManagerService", () => ({
   __esModule: true,
@@ -13,10 +14,10 @@ jest.mock("../../src/services/SseManagerService", () => ({
 
 function mockResponse(): Response {
   const res = {} as Response;
-  res.status = jest.fn().mockReturnValue(res);
-  res.json = jest.fn().mockReturnValue(res);
-  res.setHeader = jest.fn().mockReturnValue(res);
-  res.write = jest.fn().mockReturnValue(true);
+  res.status = jest.fn().mockReturnValue(res) as unknown as Response["status"];
+  res.json = jest.fn().mockReturnValue(res) as unknown as Response["json"];
+  res.setHeader = jest.fn().mockReturnValue(res) as unknown as Response["setHeader"];
+  res.write = jest.fn().mockReturnValue(true) as unknown as Response["write"];
   return res;
 }
 

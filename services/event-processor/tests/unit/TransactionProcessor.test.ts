@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import type { TransactionCreatedEvent } from "../../src/interfaces";
 import KafkaProducer from "../../src/kafka/KafkaProducer";
 import TransactionModel from "../../src/models/TransactionModel";

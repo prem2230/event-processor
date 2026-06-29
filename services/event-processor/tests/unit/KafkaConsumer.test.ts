@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
+import { afterEach, describe, expect, it, jest } from "@jest/globals";
 
 describe("KafkaConsumer", () => {
   afterEach(() => {
@@ -10,15 +10,21 @@ describe("KafkaConsumer", () => {
   it("starts the consumer and processes messages", async () => {
     let eachMessage:
       | ((payload: {
-          topic: string;
-          partition: number;
-          message: { value: Buffer; offset: string };
-        }) => Promise<void>)
+        topic: string;
+        partition: number;
+        message: { value: Buffer; offset: string };
+      }) => Promise<void>)
       | undefined;
     const consumer = {
       connect: jest.fn().mockResolvedValue(undefined),
       subscribe: jest.fn().mockResolvedValue(undefined),
-      run: jest.fn(async (options) => {
+      run: jest.fn(async (options: {
+        eachMessage: (payload: {
+          topic: string;
+          partition: number;
+          message: { value: Buffer; offset: string };
+        }) => Promise<void>;
+      }) => {
         eachMessage = options.eachMessage;
       }),
     };
@@ -78,15 +84,21 @@ describe("KafkaConsumer", () => {
   it("ignores messages without a value", async () => {
     let eachMessage:
       | ((payload: {
-          topic: string;
-          partition: number;
-          message: { value: null; offset: string };
-        }) => Promise<void>)
+        topic: string;
+        partition: number;
+        message: { value: null; offset: string };
+      }) => Promise<void>)
       | undefined;
     const consumer = {
       connect: jest.fn().mockResolvedValue(undefined),
       subscribe: jest.fn().mockResolvedValue(undefined),
-      run: jest.fn(async (options) => {
+      run: jest.fn(async (options: {
+        eachMessage: (payload: {
+          topic: string;
+          partition: number;
+          message: { value: null; offset: string };
+        }) => Promise<void>;
+      }) => {
         eachMessage = options.eachMessage;
       }),
     };
@@ -100,7 +112,7 @@ describe("KafkaConsumer", () => {
       __esModule: true,
       default: { process },
     }));
-    const warn = jest.spyOn(console, "warn").mockImplementation();
+    const warn = jest.spyOn(console, "warn").mockImplementation(() => undefined);
 
     await jest.isolateModulesAsync(async () => {
       const KafkaConsumer = require("../../src/kafka/KafkaConsumer").default;
@@ -122,15 +134,21 @@ describe("KafkaConsumer", () => {
   it("throws invalid JSON messages after logging the parse failure", async () => {
     let eachMessage:
       | ((payload: {
-          topic: string;
-          partition: number;
-          message: { value: Buffer; offset: string };
-        }) => Promise<void>)
+        topic: string;
+        partition: number;
+        message: { value: Buffer; offset: string };
+      }) => Promise<void>)
       | undefined;
     const consumer = {
       connect: jest.fn().mockResolvedValue(undefined),
       subscribe: jest.fn().mockResolvedValue(undefined),
-      run: jest.fn(async (options) => {
+      run: jest.fn(async (options: {
+        eachMessage: (payload: {
+          topic: string;
+          partition: number;
+          message: { value: Buffer; offset: string };
+        }) => Promise<void>;
+      }) => {
         eachMessage = options.eachMessage;
       }),
     };
@@ -143,7 +161,7 @@ describe("KafkaConsumer", () => {
       __esModule: true,
       default: { process: jest.fn() },
     }));
-    const error = jest.spyOn(console, "error").mockImplementation();
+    const error = jest.spyOn(console, "error").mockImplementation(() => undefined);
 
     await jest.isolateModulesAsync(async () => {
       const KafkaConsumer = require("../../src/kafka/KafkaConsumer").default;

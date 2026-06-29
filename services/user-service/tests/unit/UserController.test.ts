@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import UserController from "../../src/controllers/UserController";
 import UserService from "../../src/services/UserService";
+import { afterEach, describe, expect, it, jest } from "@jest/globals";
 
 const response = () => {
   const res = {
@@ -22,7 +23,9 @@ const request = (body: unknown = {}, userId = "user-1"): Request =>
   }) as unknown as Request;
 
 describe("UserController", () => {
-  afterEach(() => jest.restoreAllMocks());
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
 
   it("registers a user", async () => {
     const createdAt = new Date("2026-01-01");

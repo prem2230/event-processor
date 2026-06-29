@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
+import { afterEach, describe, expect, it, jest } from "@jest/globals";
 
 describe("KafkaConsumer", () => {
   afterEach(() => {
@@ -10,15 +11,15 @@ describe("KafkaConsumer", () => {
   it("starts the consumer and delivers notification messages", async () => {
     let eachMessage:
       | ((payload: {
-          topic: string;
-          partition: number;
-          message: { value: Buffer; offset: string };
-        }) => Promise<void>)
+        topic: string;
+        partition: number;
+        message: { value: Buffer; offset: string };
+      }) => Promise<void>)
       | undefined;
     const consumer = {
       connect: jest.fn().mockResolvedValue(undefined),
       subscribe: jest.fn().mockResolvedValue(undefined),
-      run: jest.fn(async (options) => {
+      run: jest.fn(async (options: { eachMessage: any }) => {
         eachMessage = options.eachMessage;
       }),
     };
@@ -27,7 +28,7 @@ describe("KafkaConsumer", () => {
         consumer: jest.fn(() => consumer),
       })),
     }));
-    const sendNotification = jest.fn(() => 2);
+    const sendNotification = jest.fn((_payload: any) => 2);
     jest.doMock("../../src/services/SseManagerService", () => ({
       __esModule: true,
       default: { sendNotification },
@@ -69,23 +70,22 @@ describe("KafkaConsumer", () => {
       topic: "notification.created",
       fromBeginning: false,
     });
-    expect(sendNotification).toHaveBeenCalledWith(
-      expect.objectContaining({ eventId: "event-1" }),
-    );
+    expect(sendNotification).toHaveBeenCalledTimes(1);
+    expect(sendNotification.mock.calls[0]?.[0]?.eventId).toBe("event-1");
   });
 
   it("ignores messages without a value", async () => {
     let eachMessage:
       | ((payload: {
-          topic: string;
-          partition: number;
-          message: { value: null; offset: string };
-        }) => Promise<void>)
+        topic: string;
+        partition: number;
+        message: { value: null; offset: string };
+      }) => Promise<void>)
       | undefined;
     const consumer = {
       connect: jest.fn().mockResolvedValue(undefined),
       subscribe: jest.fn().mockResolvedValue(undefined),
-      run: jest.fn(async (options) => {
+      run: jest.fn(async (options: { eachMessage: any }) => {
         eachMessage = options.eachMessage;
       }),
     };
@@ -99,7 +99,7 @@ describe("KafkaConsumer", () => {
       __esModule: true,
       default: { sendNotification },
     }));
-    const warn = jest.spyOn(console, "warn").mockImplementation();
+    const warn = jest.spyOn(console, "warn").mockImplementation(() => undefined);
 
     await jest.isolateModulesAsync(async () => {
       const KafkaConsumer = require("../../src/kafka/KafkaConsumer").default;
@@ -121,15 +121,15 @@ describe("KafkaConsumer", () => {
   it("throws invalid JSON messages after logging the parse failure", async () => {
     let eachMessage:
       | ((payload: {
-          topic: string;
-          partition: number;
-          message: { value: Buffer; offset: string };
-        }) => Promise<void>)
+        topic: string;
+        partition: number;
+        message: { value: Buffer; offset: string };
+      }) => Promise<void>)
       | undefined;
     const consumer = {
       connect: jest.fn().mockResolvedValue(undefined),
       subscribe: jest.fn().mockResolvedValue(undefined),
-      run: jest.fn(async (options) => {
+      run: jest.fn(async (options: { eachMessage: any }) => {
         eachMessage = options.eachMessage;
       }),
     };
@@ -142,7 +142,7 @@ describe("KafkaConsumer", () => {
       __esModule: true,
       default: { sendNotification: jest.fn() },
     }));
-    const error = jest.spyOn(console, "error").mockImplementation();
+    const error = jest.spyOn(console, "error").mockImplementation(() => undefined);
 
     await jest.isolateModulesAsync(async () => {
       const KafkaConsumer = require("../../src/kafka/KafkaConsumer").default;

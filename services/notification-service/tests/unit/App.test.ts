@@ -1,4 +1,5 @@
 import app, { NotificationServiceApp } from "../../src/app";
+import { describe, expect, it } from "@jest/globals";
 
 describe("NotificationServiceApp", () => {
   it("builds the Express app with routes and middleware", () => {

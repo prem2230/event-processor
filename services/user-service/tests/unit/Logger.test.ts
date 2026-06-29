@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
+import { afterEach, describe, expect, it, jest } from "@jest/globals";
 
 describe("Logger", () => {
   const originalEnv = process.env;
@@ -10,9 +10,9 @@ describe("Logger", () => {
   });
 
   it("writes info, warning, and error logs", () => {
-    const info = jest.spyOn(console, "info").mockImplementation();
-    const warn = jest.spyOn(console, "warn").mockImplementation();
-    const error = jest.spyOn(console, "error").mockImplementation();
+    const info = jest.spyOn(console, "info").mockImplementation(() => { });
+    const warn = jest.spyOn(console, "warn").mockImplementation(() => { });
+    const error = jest.spyOn(console, "error").mockImplementation(() => { });
 
     jest.isolateModules(() => {
       const Logger = require("../../src/utils/logger").default;
@@ -30,7 +30,7 @@ describe("Logger", () => {
 
   it("writes compact JSON logs when configured", () => {
     process.env = { ...originalEnv, LOG_FORMAT: "json" };
-    const info = jest.spyOn(console, "info").mockImplementation();
+    const info = jest.spyOn(console, "info").mockImplementation(() => { });
 
     jest.isolateModules(() => {
       const Logger = require("../../src/utils/logger").default;
@@ -42,7 +42,7 @@ describe("Logger", () => {
 
   it("filters logs below the configured level", () => {
     process.env = { ...originalEnv, LOG_LEVEL: "error" };
-    const info = jest.spyOn(console, "info").mockImplementation();
+    const info = jest.spyOn(console, "info").mockImplementation(() => { });
 
     jest.isolateModules(() => {
       const Logger = require("../../src/utils/logger").default;

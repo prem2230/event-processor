@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
+import { afterEach, describe, expect, it, jest } from "@jest/globals";
 
 describe("infrastructure wrappers", () => {
   afterEach(() => {
@@ -59,7 +59,7 @@ describe("infrastructure wrappers", () => {
   it("delegates user model operations to mongoose", async () => {
     const model = {
       findOne: jest.fn().mockResolvedValue(null),
-      create: jest.fn().mockResolvedValue({ userId: "user-1" }),
+      create: jest.fn<any>().mockResolvedValue({ userId: "user-1" }),
     };
     jest.doMock("mongoose", () => ({
       __esModule: true,

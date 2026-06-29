@@ -1,6 +1,7 @@
 import type { Response } from "express";
 import HealthController from "../../src/controllers/HealthController";
 import HealthService from "../../src/services/HealthService";
+import { afterEach, describe, expect, it, jest } from "@jest/globals";
 
 const response = () => {
   const res = {
@@ -14,7 +15,9 @@ const response = () => {
 };
 
 describe("HealthController", () => {
-  afterEach(() => jest.restoreAllMocks());
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
 
   it("reports liveness", () => {
     const res = response();

@@ -1,5 +1,6 @@
 import MongoConnection from "../../src/config/mongo";
 import HealthService from "../../src/services/HealthService";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
 jest.mock("../../src/config/mongo", () => ({
   __esModule: true,
@@ -7,7 +8,7 @@ jest.mock("../../src/config/mongo", () => ({
 }));
 
 describe("HealthService", () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => { jest.clearAllMocks(); });
 
   it("reports ready when Mongo is connected", () => {
     jest.mocked(MongoConnection.isReady).mockReturnValue(true);

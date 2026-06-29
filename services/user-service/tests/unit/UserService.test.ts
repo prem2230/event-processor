@@ -1,6 +1,7 @@
 import UserModel from "../../src/models/UserModel";
 import PasswordService from "../../src/services/PasswordService";
 import UserService from "../../src/services/UserService";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
 jest.mock("../../src/models/UserModel", () => ({
   __esModule: true,
@@ -19,7 +20,9 @@ jest.mock("../../src/services/PasswordService", () => ({
 }));
 
 describe("UserService", () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
   it("registers a user without returning password fields", async () => {
     jest.mocked(UserModel.findByEmail).mockResolvedValue(null);

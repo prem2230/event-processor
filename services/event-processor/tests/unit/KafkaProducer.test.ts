@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
+import { afterEach, describe, expect, it, jest } from "@jest/globals";
 
 describe("KafkaProducer", () => {
   afterEach(() => {
@@ -12,7 +12,7 @@ describe("KafkaProducer", () => {
       connect: jest.fn().mockResolvedValue(undefined),
       send: jest.fn().mockResolvedValue(undefined),
     };
-    const Kafka = jest.fn(() => ({
+    const Kafka: jest.Mock = jest.fn(() => ({
       producer: jest.fn(() => producer),
     }));
     jest.doMock("kafkajs", () => ({

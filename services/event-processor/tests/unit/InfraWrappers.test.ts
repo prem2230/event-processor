@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
+import { afterEach, describe, expect, it, jest } from "@jest/globals";
 
 describe("infrastructure wrappers", () => {
   afterEach(() => {
@@ -69,7 +69,9 @@ describe("infrastructure wrappers", () => {
         isReady: false,
       })),
     }));
-    const error = jest.spyOn(console, "error").mockImplementation();
+    const error = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
 
     await jest.isolateModulesAsync(async () => {
       require("../../src/config/redisClient");
@@ -86,7 +88,7 @@ describe("infrastructure wrappers", () => {
   it("delegates transaction model operations to mongoose", async () => {
     const model = {
       findOne: jest.fn().mockResolvedValue(null),
-      create: jest.fn().mockResolvedValue({ transactionId: "txn-1" }),
+      create: jest.fn<Promise<{ transactionId: string }>, []>().mockResolvedValue({ transactionId: "txn-1" }),
     };
     jest.doMock("mongoose", () => ({
       __esModule: true,

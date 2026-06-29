@@ -1,4 +1,5 @@
 import PasswordService from "../../src/services/PasswordService";
+import { describe, expect, it, jest } from "@jest/globals";
 
 describe("PasswordService", () => {
   it("hashes and verifies a password", async () => {
