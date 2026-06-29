@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach, jest } from '@jest/globals';
+import { describe, it, expect, afterEach, jest } from "@jest/globals";
 /* eslint-disable @typescript-eslint/no-require-imports */
 
 describe("HealthService", () => {
@@ -36,4 +36,3 @@ describe("HealthService", () => {
     });
   });
 });
-

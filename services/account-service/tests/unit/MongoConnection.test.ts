@@ -36,7 +36,9 @@ describe("MongoConnection", () => {
     await jest.isolateModulesAsync(async () => {
       const MongoConnection = require("../../src/config/mongo").default;
       await MongoConnection.connect();
-      expect(connect).toHaveBeenCalledWith("mongodb://localhost:27017/accounts");
+      expect(connect).toHaveBeenCalledWith(
+        "mongodb://localhost:27017/accounts",
+      );
     });
   });
 });

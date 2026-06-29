@@ -13,10 +13,7 @@ const response = () => {
   };
 };
 
-const request = (
-  body: unknown = {},
-  userId = "user-1",
-): Request =>
+const request = (body: unknown = {}, userId = "user-1"): Request =>
   ({
     body,
     header: jest.fn((name: string) =>

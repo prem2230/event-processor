@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-import { describe, afterEach, it, expect, jest } from '@jest/globals';
+import { describe, afterEach, it, expect, jest } from "@jest/globals";
 
 describe("EnvConfig", () => {
   const originalEnv = process.env;

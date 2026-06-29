@@ -24,7 +24,9 @@ describe("Logger", () => {
 
     expect(info).toHaveBeenCalledWith(expect.stringContaining("info message"));
     expect(warn).toHaveBeenCalledWith(expect.stringContaining("warn message"));
-    expect(error).toHaveBeenCalledWith(expect.stringContaining("error message"));
+    expect(error).toHaveBeenCalledWith(
+      expect.stringContaining("error message"),
+    );
   });
 
   it("filters logs below the configured level", () => {

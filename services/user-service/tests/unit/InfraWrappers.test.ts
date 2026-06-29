@@ -72,7 +72,9 @@ describe("infrastructure wrappers", () => {
     await jest.isolateModulesAsync(async () => {
       const UserModel = require("../../src/models/UserModel").default;
 
-      await expect(UserModel.findByEmail("USER@EXAMPLE.COM")).resolves.toBeNull();
+      await expect(
+        UserModel.findByEmail("USER@EXAMPLE.COM"),
+      ).resolves.toBeNull();
       await expect(UserModel.findByUserId("user-1")).resolves.toBeNull();
       await expect(
         UserModel.create({

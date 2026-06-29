@@ -54,7 +54,11 @@ describe("NotificationController", () => {
     });
     jest.spyOn(HealthService, "getConnectedClientCount").mockReturnValue(2);
 
-    NotificationController.readiness.call(NotificationController, {} as Request, res);
+    NotificationController.readiness.call(
+      NotificationController,
+      {} as Request,
+      res,
+    );
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
@@ -78,7 +82,11 @@ describe("NotificationController", () => {
       },
     });
 
-    NotificationController.readiness.call(NotificationController, {} as Request, res);
+    NotificationController.readiness.call(
+      NotificationController,
+      {} as Request,
+      res,
+    );
 
     expect(res.status).toHaveBeenCalledWith(503);
     expect(res.json).toHaveBeenCalledWith(

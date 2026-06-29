@@ -8,10 +8,14 @@ describe("AccountModel", () => {
   });
 
   it("delegates persistence operations to mongoose", async () => {
-    const sort = jest.fn<Promise<string[]>, []>().mockResolvedValue(["account"]);
+    const sort = jest
+      .fn<Promise<string[]>, []>()
+      .mockResolvedValue(["account"]);
     const model = {
       create: jest.fn().mockResolvedValue({ accountId: "account-1" } as any),
-      find: jest.fn<(filter: { userId: string }) => { sort: jest.Mock<any, any> }>(() => ({ sort })),
+      find: jest.fn<
+        (filter: { userId: string }) => { sort: jest.Mock<any, any> }
+      >(() => ({ sort })),
       findOne: jest.fn().mockResolvedValue(null),
       findOneAndUpdate: jest.fn().mockResolvedValue({ accountId: "account-1" }),
     };
