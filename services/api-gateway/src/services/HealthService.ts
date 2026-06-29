@@ -1,10 +1,8 @@
 import envConfig from "../config/env";
 import { ReadinessStatus } from "../interfaces";
-import KafkaService from "../kafka/KafkaService";
 
 class HealthService {
   private static readonly envConfig = envConfig;
-  private static readonly kafkaService = KafkaService;
 
   public static async getReadiness(): Promise<ReadinessStatus> {
     const [userService, accountService] = await Promise.all([
@@ -12,7 +10,6 @@ class HealthService {
       this.checkUpstream(this.envConfig.accountServiceUrl),
     ]);
     const checks = {
-      kafkaProducer: this.kafkaService.isReady(),
       userService,
       accountService,
     };

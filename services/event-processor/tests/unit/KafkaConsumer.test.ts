@@ -57,6 +57,7 @@ describe("KafkaConsumer", () => {
                 type: "CREDIT",
                 amount: 100,
                 status: "PENDING",
+                updatedBalance: 100,
               },
             }),
           ),

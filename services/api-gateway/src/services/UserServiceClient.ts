@@ -22,15 +22,6 @@ class UserServiceClient {
       { method: "POST", body: JSON.stringify(data) },
     );
   }
-
-  public static getProfile(userId: string) {
-    return ServiceClient.request<UserProfile | { message: string }>(
-      envConfig.userServiceUrl,
-      "/internal/users/me",
-      { method: "GET" },
-      userId,
-    );
-  }
 }
 
 export default UserServiceClient;

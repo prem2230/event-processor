@@ -1,5 +1,8 @@
 import type { Request, Response } from "express";
-import type { CreateAccountRequest } from "../interfaces";
+import type {
+  CreateAccountRequest,
+  CreateTransactionRequest,
+} from "../interfaces";
 import AccountService from "../services/AccountService";
 
 class AccountController {
@@ -41,6 +44,26 @@ class AccountController {
     return account
       ? res.status(200).json(account)
       : res.status(404).json({ message: "Account not found" });
+  };
+  public readonly createTransaction = async (
+    req: Request<{ accountId: string }, unknown, CreateTransactionRequest>,
+    res: Response,
+  ): Promise<Response> => {
+    try {
+      const userId = req.header("x-authenticated-user-id") || "";
+      return res.status(202).json(
+        await this.accountService.createTransaction(userId, {
+          ...req.body,
+          accountId: String(req.params.accountId || req.body.accountId || ""),
+        }),
+      );
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "TRANSACTION_FAILED";
+      const status =
+        message === "ACCOUNT_NOT_FOUND_OR_INSUFFICIENT_FUNDS" ? 409 : 400;
+      return res.status(status).json({ message });
+    }
   };
 }
 

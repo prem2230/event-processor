@@ -18,6 +18,12 @@ class EnvConfig {
     process.env.MONGO_URI || "mongodb://localhost:27017/accounts";
   public static readonly internalServiceToken =
     process.env.INTERNAL_SERVICE_TOKEN || "local-internal-service-token";
+  public static readonly kafkaBroker =
+    process.env.KAFKA_BROKER || "localhost:9092";
+  public static readonly kafkaClientId =
+    process.env.KAFKA_CLIENT_ID || "account-service";
+  public static readonly kafkaTransactionCreatedTopic =
+    process.env.KAFKA_TRANSACTION_CREATED_TOPIC || "transaction.created";
 
   public static validateProductionSecrets(): void {
     if (

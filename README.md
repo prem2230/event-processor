@@ -1,6 +1,6 @@
 # Real-Time Event Processing Platform
 
-A TypeScript microservice project that simulates an enterprise banking transaction flow using Kafka, MongoDB, Redis, Express, SSE, Docker, and a Next.js frontend.
+A TypeScript microservice project that simulates an enterprise banking transaction flow using Kafka, MongoDB, Express, SSE, Docker, and a Next.js frontend.
 
 ## Architecture
 
@@ -9,10 +9,10 @@ Frontend
   -> API Gateway
        -> User Service
        -> Account Service
+  -> Account balance update
   -> Kafka topic: transaction.created
   -> Event Processor
   -> MongoDB transaction write
-  -> Redis balance update
   -> Kafka topic: notification.created
   -> Notification Service
   -> SSE live update
@@ -47,7 +47,7 @@ always scoped to the authenticated user.
 services/event-processor
 ```
 
-Consumes `transaction.created`, saves completed transactions in MongoDB, updates Redis account balances, and publishes `notification.created`.
+Consumes `transaction.created`, saves completed transactions in MongoDB, and publishes `notification.created`.
 
 ```txt
 services/notification-service
@@ -100,7 +100,6 @@ User Service:         http://localhost:3004
 Account Service:      http://localhost:3005
 Kafka:                localhost:9092
 MongoDB:              localhost:27017
-Redis:                localhost:6379
 ```
 
 ## Environment Files
@@ -137,7 +136,7 @@ Run the backend stack with Docker Compose:
 docker compose up --build
 ```
 
-This starts Redis, Kafka, creates the required Kafka topics, and runs all
+This starts Kafka, creates the required Kafka topics, and runs all
 backend services. MongoDB is expected to be remote and configured through the
 root `.env` file. The frontend can still be run separately with `npm run dev`
 from the `frontend` directory.
@@ -145,7 +144,7 @@ from the `frontend` directory.
 For manual backend development, start only shared infrastructure:
 
 ```bash
-docker compose up -d redis kafka kafka-init
+docker compose up -d kafka kafka-init
 ```
 
 Run API Gateway:
@@ -311,5 +310,5 @@ npm run validate
 
 ## Resume Summary
 
-Built a real-time event-driven banking transaction platform using Node.js, TypeScript, Kafka, Redis, MongoDB, Docker, SSE, Express, and Next.js. The system demonstrates asynchronous microservice communication, event processing, database persistence, cache updates, and live frontend notifications.
+Built a real-time event-driven banking transaction platform using Node.js, TypeScript, Kafka, MongoDB, Docker, SSE, Express, and Next.js. The system demonstrates asynchronous microservice communication, event processing, database persistence, account balance updates, and live frontend notifications.
 

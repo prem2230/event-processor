@@ -1,17 +1,4 @@
 services:
-  redis:
-    image: redis:7-alpine
-    container_name: event-platform-redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis-data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-
   kafka:
     image: bitnami/kafka:3.7
     container_name: event-platform-kafka
@@ -83,6 +70,12 @@ services:
       PORT: "3005"
       MONGO_URI: ${ACCOUNT_SERVICE_MONGO_URI:?Set ACCOUNT_SERVICE_MONGO_URI in the root .env file}
       INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:-local-internal-service-token}
+      KAFKA_BROKER: kafka:9092
+      KAFKA_CLIENT_ID: account-service
+      KAFKA_TRANSACTION_CREATED_TOPIC: transaction.created
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
 
   api-gateway:
     build:
@@ -95,9 +88,6 @@ services:
       LOG_FORMAT: json
       LOG_LEVEL: info
       PORT: "3000"
-      KAFKA_BROKER: kafka:9092
-      KAFKA_CLIENT_ID: banking-event-platform
-      KAFKA_TRANSACTION_CREATED_TOPIC: transaction.created
       USER_SERVICE_URL: http://user-service:3004
       ACCOUNT_SERVICE_URL: http://account-service:3005
       INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:-local-internal-service-token}
@@ -107,8 +97,6 @@ services:
       JWT_EXPIRES_IN_SECONDS: "900"
       UPSTREAM_TIMEOUT_MS: "3000"
     depends_on:
-      kafka-init:
-        condition: service_completed_successfully
       user-service:
         condition: service_started
       account-service:
@@ -131,10 +119,7 @@ services:
       KAFKA_TRANSACTION_CREATED_TOPIC: transaction.created
       KAFKA_NOTIFICATION_CREATED_TOPIC: notification.created
       MONGO_URI: ${EVENT_PROCESSOR_MONGO_URI:?Set EVENT_PROCESSOR_MONGO_URI in the root .env file}
-      REDIS_URL: redis://redis:6379
     depends_on:
-      redis:
-        condition: service_healthy
       kafka-init:
         condition: service_completed_successfully
 
@@ -158,5 +143,4 @@ services:
         condition: service_completed_successfully
 
 volumes:
-  redis-data:
   kafka-data:

@@ -11,5 +11,6 @@ export interface TransactionCreatedEvent {
     type: TransactionType;
     amount: number;
     status: "PENDING";
+    updatedBalance: number;
   };
 }

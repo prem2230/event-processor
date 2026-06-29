@@ -35,7 +35,6 @@ describe("HealthController", () => {
       ready: false,
       checks: {
         mongo: true,
-        redis: true,
         kafkaProducer: true,
         kafkaConsumer: false,
       },
@@ -51,7 +50,6 @@ describe("HealthController", () => {
       status: "not_ready",
       checks: {
         mongo: true,
-        redis: true,
         kafkaProducer: true,
         kafkaConsumer: false,
       },
@@ -64,7 +62,6 @@ describe("HealthController", () => {
       ready: true,
       checks: {
         mongo: true,
-        redis: true,
         kafkaProducer: true,
         kafkaConsumer: true,
       },

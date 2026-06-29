@@ -2,17 +2,20 @@ import type { Server } from "node:http";
 import app from "./app";
 import envConfig from "./config/env";
 import MongoConnection from "./config/mongo";
+import KafkaProducer from "./kafka/KafkaProducer";
 import Logger from "./utils/logger";
 
 class AccountServiceServer {
   private static readonly logger = Logger;
   private static readonly envConfig = envConfig;
   private static readonly mongoConnection = MongoConnection;
+  private static readonly kafkaProducer = KafkaProducer;
 
   public static async start(): Promise<void> {
     this.envConfig.validateProductionSecrets();
     AccountServiceServer.listen();
     await this.mongoConnection.connect();
+    await this.kafkaProducer.connect();
     this.logger.info("Account Service started");
   }
   private static listen(): Server {

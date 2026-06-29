@@ -1,16 +1,7 @@
-import RedisService from "../../src/config/redisClient";
 import type { TransactionCreatedEvent } from "../../src/interfaces";
 import KafkaProducer from "../../src/kafka/KafkaProducer";
 import TransactionModel from "../../src/models/TransactionModel";
 import TransactionProcessor from "../../src/services/TransactionProcessorService";
-
-jest.mock("../../src/config/redisClient", () => ({
-  __esModule: true,
-  default: {
-    get: jest.fn(),
-    set: jest.fn(),
-  },
-}));
 
 jest.mock("../../src/models/TransactionModel", () => ({
   __esModule: true,
@@ -38,6 +29,7 @@ const transactionEvent: TransactionCreatedEvent = {
     type: "CREDIT",
     amount: 2500,
     status: "PENDING",
+    updatedBalance: 3500,
   },
 };
 
@@ -46,11 +38,9 @@ describe("TransactionProcessor", () => {
     jest.clearAllMocks();
   });
 
-  it("saves a new transaction, updates Redis balance, and publishes notification", async () => {
+  it("saves a new transaction and publishes notification", async () => {
     jest.mocked(TransactionModel.findByTransactionId).mockResolvedValue(null);
-    jest.mocked(RedisService.get).mockResolvedValue("1000");
     jest.mocked(TransactionModel.create).mockResolvedValue({} as never);
-    jest.mocked(RedisService.set).mockResolvedValue(undefined);
     jest
       .mocked(KafkaProducer.publishNotificationCreated)
       .mockResolvedValue(undefined);
@@ -65,10 +55,6 @@ describe("TransactionProcessor", () => {
         status: "COMPLETED",
       }),
     );
-    expect(RedisService.set).toHaveBeenCalledWith(
-      "account:acc-5001:balance",
-      "3500",
-    );
     expect(KafkaProducer.publishNotificationCreated).toHaveBeenCalledWith({
       userId: "user-101",
       transactionId: "txn-1",
@@ -79,37 +65,6 @@ describe("TransactionProcessor", () => {
     });
   });
 
-  it("deducts balance for debit transactions", async () => {
-    jest.mocked(TransactionModel.findByTransactionId).mockResolvedValue(null);
-    jest.mocked(RedisService.get).mockResolvedValue("4000");
-
-    await TransactionProcessor.process({
-      ...transactionEvent,
-      data: {
-        ...transactionEvent.data,
-        type: "DEBIT",
-        amount: 1500,
-      },
-    });
-
-    expect(RedisService.set).toHaveBeenCalledWith(
-      "account:acc-5001:balance",
-      "2500",
-    );
-  });
-
-  it("defaults a missing cached balance to zero", async () => {
-    jest.mocked(TransactionModel.findByTransactionId).mockResolvedValue(null);
-    jest.mocked(RedisService.get).mockResolvedValue(null);
-
-    await TransactionProcessor.process(transactionEvent);
-
-    expect(RedisService.set).toHaveBeenCalledWith(
-      "account:acc-5001:balance",
-      "2500",
-    );
-  });
-
   it("ignores duplicate transactions", async () => {
     jest
       .mocked(TransactionModel.findByTransactionId)
@@ -118,7 +73,6 @@ describe("TransactionProcessor", () => {
     await TransactionProcessor.process(transactionEvent);
 
     expect(TransactionModel.create).not.toHaveBeenCalled();
-    expect(RedisService.set).not.toHaveBeenCalled();
     expect(KafkaProducer.publishNotificationCreated).not.toHaveBeenCalled();
   });
 });

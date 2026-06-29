@@ -1,21 +1,18 @@
 import type { Server } from "node:http";
 import app from "./app";
 import envConfig from "./config/env";
-import KafkaService from "./kafka/KafkaService";
 import Logger from "./utils/logger";
 
 class ApiGatewayServer {
   private static readonly logger = Logger;
   private static readonly app = app;
   private static readonly envConfig = envConfig;
-  private static readonly kafkaService = KafkaService;
 
   public static async start(): Promise<void> {
     this.logger.info("Starting API Gateway");
 
     envConfig.validateProductionSecrets();
     this.listen();
-    await this.kafkaService.connect();
 
     this.logger.info("API Gateway started");
   }

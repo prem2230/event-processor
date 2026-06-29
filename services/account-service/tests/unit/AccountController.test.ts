@@ -39,6 +39,7 @@ describe("AccountController", () => {
       userId: "user-1",
       type: "CURRENT",
       currency: "INR",
+      balance: 0,
       status: "ACTIVE",
       createdAt,
     });
@@ -85,6 +86,7 @@ describe("AccountController", () => {
       userId: "user-1",
       type: "SAVINGS",
       currency: "INR",
+      balance: 0,
       status: "ACTIVE",
       createdAt,
     });
@@ -104,5 +106,38 @@ describe("AccountController", () => {
 
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith({ message: "Account not found" });
+  });
+
+  it("creates a transaction for an owned account", async () => {
+    jest.spyOn(AccountService, "createTransaction").mockResolvedValue({
+      message: "Transaction event published",
+      event: {
+        eventId: "event-1",
+        eventType: "transaction.created",
+        occurredAt: "2026-01-01T00:00:00.000Z",
+        data: {
+          transactionId: "txn-1",
+          userId: "user-1",
+          accountId: "account-1",
+          type: "CREDIT",
+          amount: 100,
+          status: "PENDING",
+          updatedBalance: 100,
+        },
+      },
+    });
+    const res = response();
+
+    await AccountController.createTransaction(
+      request({ type: "CREDIT", amount: 100 }, { accountId: "account-1" }),
+      res,
+    );
+
+    expect(AccountService.createTransaction).toHaveBeenCalledWith("user-1", {
+      accountId: "account-1",
+      type: "CREDIT",
+      amount: 100,
+    });
+    expect(res.status).toHaveBeenCalledWith(202);
   });
 });

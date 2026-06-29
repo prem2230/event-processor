@@ -15,12 +15,6 @@ class EnvConfig {
   ).toLowerCase();
   public static readonly levelPriority = { error: 0, warn: 1, info: 2 };
   public static readonly port = Number(process.env.PORT) || 3000;
-  public static readonly kafkaClientId =
-    process.env.KAFKA_CLIENT_ID || "banking-event-platform";
-  public static readonly kafkaBroker =
-    process.env.KAFKA_BROKER || "localhost:9092";
-  public static readonly kafkaTransactionCreatedTopic =
-    process.env.KAFKA_TRANSACTION_CREATED_TOPIC || "transaction.created";
   public static readonly userServiceUrl =
     process.env.USER_SERVICE_URL || "http://localhost:3004";
   public static readonly accountServiceUrl =

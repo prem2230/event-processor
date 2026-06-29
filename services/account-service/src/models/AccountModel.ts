@@ -7,6 +7,7 @@ const schema = new mongoose.Schema<AccountDocument>(
     userId: { type: String, required: true, index: true },
     type: { type: String, enum: ["CURRENT", "SAVINGS"], required: true },
     currency: { type: String, required: true, default: "INR" },
+    balance: { type: Number, required: true, default: 0 },
     status: {
       type: String,
       enum: ["ACTIVE", "FROZEN", "CLOSED"],
@@ -32,6 +33,25 @@ class AccountModel {
     userId: string,
   ): Promise<AccountDocument | null> {
     return model.findOne({ accountId, userId });
+  }
+  public static applyTransaction(
+    accountId: string,
+    userId: string,
+    amountDelta: number,
+    minimumBalance?: number,
+  ): Promise<AccountDocument | null> {
+    return model.findOneAndUpdate(
+      {
+        accountId,
+        userId,
+        status: "ACTIVE",
+        ...(minimumBalance === undefined
+          ? {}
+          : { balance: { $gte: minimumBalance } }),
+      },
+      { $inc: { balance: amountDelta } },
+      { new: true },
+    );
   }
 }
 

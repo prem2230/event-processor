@@ -2,7 +2,6 @@ import type { Server } from "node:http";
 import app from "./app";
 import envConfig from "./config/env";
 import MongoConnection from "./config/mongo";
-import RedisService from "./config/redisClient";
 import KafkaConsumer from "./kafka/KafkaConsumer";
 import KafkaProducer from "./kafka/KafkaProducer";
 import Logger from "./utils/logger";
@@ -13,7 +12,6 @@ class EventProcessorServer {
   private static readonly app = app;
   private static readonly port = this.envConfig.port;
   private static readonly mongoConnection = MongoConnection;
-  private static readonly redisService = RedisService;
   private static readonly kafkaProducer = KafkaProducer;
   private static readonly kafkaConsumer = KafkaConsumer;
 
@@ -22,7 +20,6 @@ class EventProcessorServer {
 
     this.listen();
     await this.mongoConnection.connect();
-    await this.redisService.connect();
     await this.kafkaProducer.connect();
     await this.kafkaConsumer.start();
 

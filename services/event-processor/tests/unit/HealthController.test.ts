@@ -24,7 +24,6 @@ describe("Health routes", () => {
       ready: false,
       checks: {
         mongo: true,
-        redis: true,
         kafkaProducer: true,
         kafkaConsumer: false,
       },
@@ -40,7 +39,6 @@ describe("Health routes", () => {
       ready: true,
       checks: {
         mongo: true,
-        redis: true,
         kafkaProducer: true,
         kafkaConsumer: true,
       },

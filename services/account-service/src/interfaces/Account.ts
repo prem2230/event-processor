@@ -11,6 +11,7 @@ export interface AccountResponse {
   userId: string;
   type: AccountType;
   currency: string;
+  balance: number;
   status: AccountStatus;
   createdAt: Date;
 }
@@ -19,7 +20,31 @@ export interface AccountDocument {
   userId: string;
   type: AccountType;
   currency: string;
+  balance: number;
   status: AccountStatus;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export type TransactionType = "CREDIT" | "DEBIT";
+
+export interface CreateTransactionRequest {
+  accountId: string;
+  type: TransactionType;
+  amount: number;
+}
+
+export interface TransactionCreatedEvent {
+  eventId: string;
+  eventType: "transaction.created";
+  occurredAt: string;
+  data: {
+    transactionId: string;
+    userId: string;
+    accountId: string;
+    type: TransactionType;
+    amount: number;
+    status: "PENDING";
+    updatedBalance: number;
+  };
 }

@@ -8,7 +8,7 @@ describe("Health routes", () => {
     jest.restoreAllMocks();
   });
 
-  it("reports liveness while Kafka is still connecting", async () => {
+  it("reports liveness", async () => {
     const response = await request(app).get("/health/live");
 
     expect(response.status).toBe(200);
@@ -27,13 +27,12 @@ describe("Health routes", () => {
     expect(response.body.service).toBe("api-gateway");
   });
 
-  it("reports not ready while the Kafka producer is unavailable", async () => {
+  it("reports not ready while an upstream service is unavailable", async () => {
     jest.spyOn(HealthService, "getReadiness").mockResolvedValue({
       ready: false,
       checks: {
-        kafkaProducer: false,
         userService: true,
-        accountService: true,
+        accountService: false,
       },
     });
 
@@ -41,14 +40,13 @@ describe("Health routes", () => {
 
     expect(response.status).toBe(503);
     expect(response.body.status).toBe("not_ready");
-    expect(response.body.checks.kafkaProducer).toBe(false);
+    expect(response.body.checks.accountService).toBe(false);
   });
 
-  it("reports ready after the Kafka producer connects", async () => {
+  it("reports ready after upstream services are reachable", async () => {
     jest.spyOn(HealthService, "getReadiness").mockResolvedValue({
       ready: true,
       checks: {
-        kafkaProducer: true,
         userService: true,
         accountService: true,
       },

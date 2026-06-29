@@ -1,43 +1,23 @@
-import type { Response } from "express";
+import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import AccountController from "../../src/controllers/AccountController";
-import UserController from "../../src/controllers/UserController";
-import AccountServiceClient from "../../src/services/AccountServiceClient";
-import UserServiceClient from "../../src/services/UserServiceClient";
-import type { Account, UserProfile } from "../../src/interfaces";
+import ProxyController from "../../src/controllers/ProxyController";
+import ServiceClient from "../../src/services/ServiceClient";
+import type { ProxyRouteConfig } from "../../src/config/proxyRoutes";
 import type { AuthenticatedRequest } from "../../src/types";
 
-const userProfile: UserProfile = {
-  userId: "user-101",
-  email: "user@example.com",
-  firstName: "Prem",
-  lastName: "K",
-  status: "ACTIVE",
-};
-
-const account: Account = {
-  accountId: "acc-1",
-  userId: "user-101",
-  type: "SAVINGS",
-  currency: "INR",
-  status: "ACTIVE",
-};
-
-jest.mock("../../src/services/AccountServiceClient", () => ({
+jest.mock("../../src/services/ServiceClient", () => ({
   __esModule: true,
   default: {
-    create: jest.fn(),
-    list: jest.fn(),
-    get: jest.fn(),
+    request: jest.fn(),
   },
 }));
 
-jest.mock("../../src/services/UserServiceClient", () => ({
-  __esModule: true,
-  default: {
-    getProfile: jest.fn(),
-  },
-}));
+const route: ProxyRouteConfig = {
+  method: "post",
+  publicPath: "/accounts",
+  upstreamBaseUrl: "http://account-service:3005",
+  upstreamPath: "/internal/accounts",
+};
 
 function mockResponse(): Response {
   return {
@@ -46,77 +26,84 @@ function mockResponse(): Response {
   } as unknown as Response;
 }
 
-describe("Proxy controllers", () => {
+function mockRequest(
+  body: unknown = { type: "SAVINGS" },
+): AuthenticatedRequest & Request {
+  return {
+    method: "POST",
+    body,
+    authenticatedUser: { userId: "user-101", email: "user@example.com" },
+    header: jest.fn((name: string) =>
+      name.toLowerCase() === "authorization" ? "Bearer token" : undefined,
+    ),
+  } as unknown as AuthenticatedRequest & Request;
+}
+
+describe("ProxyController", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-  });
-
-  it("gets the authenticated user profile", async () => {
-    jest.mocked(UserServiceClient.getProfile).mockResolvedValue({
-      status: 200,
-      body: userProfile,
-    });
-    const req = {
-      authenticatedUser: { userId: "user-101", email: "user@example.com" },
-    } as AuthenticatedRequest;
-    const res = mockResponse();
-
-    await UserController.getProfile(req, res);
-
-    expect(UserServiceClient.getProfile).toHaveBeenCalledWith("user-101");
-    expect(res.status).toHaveBeenCalledWith(200);
-  });
-
-  it("creates an account for the authenticated user", async () => {
-    jest.mocked(AccountServiceClient.create).mockResolvedValue({
+    jest.mocked(ServiceClient.request).mockResolvedValue({
       status: 201,
-      body: account,
+      body: { ok: true },
     });
-    const req = {
-      authenticatedUser: { userId: "user-101", email: "user@example.com" },
-      body: { type: "SAVINGS", currency: "INR" },
-    } as AuthenticatedRequest;
+  });
+
+  it("forwards authenticated requests to the configured upstream", async () => {
+    const req = mockRequest();
     const res = mockResponse();
 
-    await AccountController.create(req, res);
+    await ProxyController.handler(route)(req, res);
 
-    expect(AccountServiceClient.create).toHaveBeenCalledWith(
+    expect(ServiceClient.request).toHaveBeenCalledWith(
+      "http://account-service:3005",
+      "/internal/accounts",
+      {
+        method: "POST",
+        body: JSON.stringify(req.body),
+        headers: { authorization: "Bearer token" },
+      },
       "user-101",
-      req.body,
     );
     expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.json).toHaveBeenCalledWith({ ok: true });
   });
 
-  it("lists accounts for the authenticated user", async () => {
-    jest.mocked(AccountServiceClient.list).mockResolvedValue({
-      status: 200,
-      body: [account],
-    });
-    const req = {
-      authenticatedUser: { userId: "user-101", email: "user@example.com" },
-    } as AuthenticatedRequest;
+  it("builds dynamic upstream paths", async () => {
+    const req = mockRequest({ accountId: "acc 1", amount: 100 });
     const res = mockResponse();
+    const dynamicRoute: ProxyRouteConfig = {
+      method: "post",
+      publicPath: "/transactions",
+      upstreamBaseUrl: "http://account-service:3005",
+      upstreamPath: (request) =>
+        `/internal/accounts/${encodeURIComponent(
+          String(request.body.accountId),
+        )}/transactions`,
+    };
 
-    await AccountController.list(req, res);
+    await ProxyController.handler(dynamicRoute)(req, res);
 
-    expect(AccountServiceClient.list).toHaveBeenCalledWith("user-101");
-    expect(res.status).toHaveBeenCalledWith(200);
+    expect(ServiceClient.request).toHaveBeenCalledWith(
+      "http://account-service:3005",
+      "/internal/accounts/acc%201/transactions",
+      expect.any(Object),
+      "user-101",
+    );
   });
 
-  it("gets a single account for the authenticated user", async () => {
-    jest.mocked(AccountServiceClient.get).mockResolvedValue({
-      status: 200,
-      body: account,
-    });
-    const req = {
-      authenticatedUser: { userId: "user-101", email: "user@example.com" },
-      params: { accountId: "acc-1" },
-    } as unknown as AuthenticatedRequest;
+  it("returns bad request when a dynamic path cannot be built", async () => {
+    const req = mockRequest({});
     const res = mockResponse();
+    const invalidRoute: ProxyRouteConfig = {
+      method: "post",
+      publicPath: "/transactions",
+      upstreamBaseUrl: "http://account-service:3005",
+      upstreamPath: () => null,
+    };
 
-    await AccountController.get(req, res);
+    await ProxyController.handler(invalidRoute)(req, res);
 
-    expect(AccountServiceClient.get).toHaveBeenCalledWith("user-101", "acc-1");
-    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(ServiceClient.request).not.toHaveBeenCalled();
   });
 });

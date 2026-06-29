@@ -1,4 +1,3 @@
-import RedisService from "../config/redisClient";
 import type { TransactionCreatedEvent } from "../interfaces";
 import KafkaProducer from "../kafka/KafkaProducer";
 import TransactionModel from "../models/TransactionModel";
@@ -6,7 +5,6 @@ import Logger from "../utils/logger";
 
 class TransactionProcessor {
   private static readonly logger = Logger;
-  private static readonly redisService = RedisService;
   private static readonly transactionModel = TransactionModel;
   private static readonly kafkaProducer = KafkaProducer;
 
@@ -34,17 +32,6 @@ class TransactionProcessor {
       return;
     }
 
-    const balanceKey = TransactionProcessor.getBalanceKey(
-      transaction.accountId,
-    );
-    const currentBalance = Number(
-      (await TransactionProcessor.redisService.get(balanceKey)) || 0,
-    );
-    const updatedBalance =
-      transaction.type === "CREDIT"
-        ? currentBalance + transaction.amount
-        : currentBalance - transaction.amount;
-
     await TransactionProcessor.transactionModel.create({
       transactionId: transaction.transactionId,
       eventId: event.eventId,
@@ -56,18 +43,13 @@ class TransactionProcessor {
       processedAt: new Date(),
     });
 
-    await TransactionProcessor.redisService.set(
-      balanceKey,
-      updatedBalance.toString(),
-    );
-
     await TransactionProcessor.kafkaProducer.publishNotificationCreated({
       userId: transaction.userId,
       transactionId: transaction.transactionId,
       accountId: transaction.accountId,
       status: "COMPLETED",
       message: "Transaction completed successfully",
-      updatedBalance,
+      updatedBalance: transaction.updatedBalance,
     });
 
     TransactionProcessor.logger.info("Transaction processed", {
@@ -76,10 +58,6 @@ class TransactionProcessor {
       status: "COMPLETED",
       durationMs: Date.now() - startedAt,
     });
-  }
-
-  private static getBalanceKey(accountId: string): string {
-    return `account:${accountId}:balance`;
   }
 }
 
