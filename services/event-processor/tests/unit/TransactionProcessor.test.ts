@@ -1,25 +1,22 @@
-import { processTransaction } from "../../src/processors/TransactionProcessor";
-import { redisClient } from "../../src/config/redisClient";
-import { TransactionModel } from "../../src/models/TransactionModel";
-import { publishNotificationCreated } from "../../src/kafka/KafkaProducer";
-import { TransactionCreatedEvent } from "../../src/interfaces";
-
-jest.mock("../../src/config/redisClient", () => ({
-  redisClient: {
-    get: jest.fn(),
-    set: jest.fn(),
-  },
-}));
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import type { TransactionCreatedEvent } from "../../src/interfaces";
+import KafkaProducer from "../../src/kafka/KafkaProducer";
+import TransactionModel from "../../src/models/TransactionModel";
+import TransactionProcessor from "../../src/services/TransactionProcessorService";
 
 jest.mock("../../src/models/TransactionModel", () => ({
-  TransactionModel: {
-    findOne: jest.fn(),
+  __esModule: true,
+  default: {
+    findByTransactionId: jest.fn(),
     create: jest.fn(),
   },
 }));
 
 jest.mock("../../src/kafka/KafkaProducer", () => ({
-  publishNotificationCreated: jest.fn(),
+  __esModule: true,
+  default: {
+    publishNotificationCreated: jest.fn(),
+  },
 }));
 
 const transactionEvent: TransactionCreatedEvent = {
@@ -33,6 +30,7 @@ const transactionEvent: TransactionCreatedEvent = {
     type: "CREDIT",
     amount: 2500,
     status: "PENDING",
+    updatedBalance: 3500,
   },
 };
 
@@ -41,30 +39,24 @@ describe("TransactionProcessor", () => {
     jest.clearAllMocks();
   });
 
-  it("saves a new transaction, updates Redis balance, and publishes notification", async () => {
-    jest.mocked(TransactionModel.findOne).mockResolvedValue(null);
-    jest.mocked(redisClient.get).mockResolvedValue("1000");
+  it("saves a new transaction and publishes notification", async () => {
+    jest.mocked(TransactionModel.findByTransactionId).mockResolvedValue(null);
     jest.mocked(TransactionModel.create).mockResolvedValue({} as never);
-    jest.mocked(redisClient.set).mockResolvedValue("OK");
-    jest.mocked(publishNotificationCreated).mockResolvedValue(undefined);
+    jest
+      .mocked(KafkaProducer.publishNotificationCreated)
+      .mockResolvedValue(undefined);
 
-    await processTransaction(transactionEvent);
+    await TransactionProcessor.process(transactionEvent);
 
-    expect(TransactionModel.findOne).toHaveBeenCalledWith({
-      transactionId: "txn-1",
-    });
+    expect(TransactionModel.findByTransactionId).toHaveBeenCalledWith("txn-1");
     expect(TransactionModel.create).toHaveBeenCalledWith(
       expect.objectContaining({
         transactionId: "txn-1",
         eventId: "event-1",
         status: "COMPLETED",
-      })
+      }),
     );
-    expect(redisClient.set).toHaveBeenCalledWith(
-      "account:acc-5001:balance",
-      "3500"
-    );
-    expect(publishNotificationCreated).toHaveBeenCalledWith({
+    expect(KafkaProducer.publishNotificationCreated).toHaveBeenCalledWith({
       userId: "user-101",
       transactionId: "txn-1",
       accountId: "acc-5001",
@@ -74,32 +66,14 @@ describe("TransactionProcessor", () => {
     });
   });
 
-  it("deducts balance for debit transactions", async () => {
-    jest.mocked(TransactionModel.findOne).mockResolvedValue(null);
-    jest.mocked(redisClient.get).mockResolvedValue("4000");
-
-    await processTransaction({
-      ...transactionEvent,
-      data: {
-        ...transactionEvent.data,
-        type: "DEBIT",
-        amount: 1500,
-      },
-    });
-
-    expect(redisClient.set).toHaveBeenCalledWith(
-      "account:acc-5001:balance",
-      "2500"
-    );
-  });
-
   it("ignores duplicate transactions", async () => {
-    jest.mocked(TransactionModel.findOne).mockResolvedValue({} as never);
+    jest
+      .mocked(TransactionModel.findByTransactionId)
+      .mockResolvedValue({} as never);
 
-    await processTransaction(transactionEvent);
+    await TransactionProcessor.process(transactionEvent);
 
     expect(TransactionModel.create).not.toHaveBeenCalled();
-    expect(redisClient.set).not.toHaveBeenCalled();
-    expect(publishNotificationCreated).not.toHaveBeenCalled();
+    expect(KafkaProducer.publishNotificationCreated).not.toHaveBeenCalled();
   });
 });

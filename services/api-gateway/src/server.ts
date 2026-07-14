@@ -1,45 +1,36 @@
+import type { Server } from "node:http";
 import app from "./app";
 import envConfig from "./config/env";
-import { producer } from "./kafka/KafkaService";
 import Logger from "./utils/logger";
 
 class ApiGatewayServer {
   private static readonly logger = Logger;
-  private static readonly producer = producer;
   private static readonly app = app;
-  private static readonly port = Number(envConfig.port) || 3000;
+  private static readonly envConfig = envConfig;
 
   public static async start(): Promise<void> {
-    await ApiGatewayServer.connectKafkaProducer();
-    ApiGatewayServer.listen();
+    this.logger.info("Starting API Gateway");
+
+    envConfig.validateProductionSecrets();
+    this.listen();
+
+    this.logger.info("API Gateway started");
   }
 
-  private static async connectKafkaProducer(): Promise<void> {
-    ApiGatewayServer.logger.info("Connecting Kafka producer", {
-      clientId: envConfig.kafkaClientId,
-      broker: envConfig.kafkaBroker,
-    });
-
-    await ApiGatewayServer.producer.connect();
-
-    ApiGatewayServer.logger.info("Kafka producer connected", {
-      clientId: envConfig.kafkaClientId,
-    });
-  }
-
-  private static listen(): void {
-    ApiGatewayServer.app.listen(ApiGatewayServer.port, () => {
-      ApiGatewayServer.logger.info("API Gateway started", {
-        port: ApiGatewayServer.port,
+  private static listen(): Server {
+    return this.app.listen(this.envConfig.port, () => {
+      this.logger.info("API Gateway HTTP server started", {
+        port: this.envConfig.port,
+        livenessPath: "/health/live",
+        readinessPath: "/health/ready",
       });
     });
   }
 
   public static handleStartupError(error: unknown): never {
-    ApiGatewayServer.logger.error("API Gateway failed to start", {
+    this.logger.error("API Gateway failed to start", {
       error: error instanceof Error ? error.message : String(error),
     });
-
     process.exit(1);
   }
 }

@@ -1,6 +1,8 @@
 import express, { type Express } from "express";
 import cors from "cors";
-import TransactionRoutes from "./routes/TransactionRoute";
+import HealthRoutes from "./routes/HealthRoute";
+import AuthRoutes from "./routes/AuthRoute";
+import ProxyRoutes from "./routes/ProxyRoute";
 
 class ApiGatewayApp {
   private readonly app: Express;
@@ -16,12 +18,16 @@ class ApiGatewayApp {
   }
 
   private registerMiddlewares(): void {
+    this.app.disable("x-powered-by");
     this.app.use(cors());
     this.app.use(express.json());
   }
 
   private registerRoutes(): void {
-    this.app.use("/v1/api", TransactionRoutes);
+    this.app.use(HealthRoutes);
+    this.app.use("/v1/api", HealthRoutes);
+    this.app.use("/v1/api", AuthRoutes);
+    this.app.use("/v1/api", ProxyRoutes);
   }
 }
 
