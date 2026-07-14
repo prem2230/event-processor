@@ -1,28 +1,26 @@
 import type { Server } from "node:http";
 import app from "./app";
 import envConfig from "./config/env";
-import KafkaService from "./kafka/KafkaService";
 import Logger from "./utils/logger";
 
 class ApiGatewayServer {
   private static readonly logger = Logger;
   private static readonly app = app;
-  private static readonly port = envConfig.port;
-  private static readonly kafkaService = KafkaService;
+  private static readonly envConfig = envConfig;
 
   public static async start(): Promise<void> {
-    ApiGatewayServer.logger.info("Starting API Gateway");
+    this.logger.info("Starting API Gateway");
 
-    ApiGatewayServer.listen();
-    await ApiGatewayServer.kafkaService.connect();
+    envConfig.validateProductionSecrets();
+    this.listen();
 
-    ApiGatewayServer.logger.info("API Gateway started");
+    this.logger.info("API Gateway started");
   }
 
   private static listen(): Server {
-    return ApiGatewayServer.app.listen(ApiGatewayServer.port, () => {
-      ApiGatewayServer.logger.info("API Gateway HTTP server started", {
-        port: ApiGatewayServer.port,
+    return this.app.listen(this.envConfig.port, () => {
+      this.logger.info("API Gateway HTTP server started", {
+        port: this.envConfig.port,
         livenessPath: "/health/live",
         readinessPath: "/health/ready",
       });
@@ -30,7 +28,7 @@ class ApiGatewayServer {
   }
 
   public static handleStartupError(error: unknown): never {
-    ApiGatewayServer.logger.error("API Gateway failed to start", {
+    this.logger.error("API Gateway failed to start", {
       error: error instanceof Error ? error.message : String(error),
     });
     process.exit(1);

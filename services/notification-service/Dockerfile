@@ -24,6 +24,6 @@ COPY --from=builder /app/dist ./dist
 EXPOSE 3002
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-  CMD node -e "fetch('http://127.0.0.1:' + (process.env.PORT || 3002) + '/health/ready').then(response => { if (!response.ok) process.exit(1) }).catch(() => process.exit(1))"
+  CMD node -e "fetch('http://127.0.0.1:' + (process.env.PORT || 3002) + '/health/live').then(response => { if (!response.ok) process.exit(1) }).catch(() => process.exit(1))"
 
 CMD ["node", "dist/server.js"]

@@ -1,18 +1,14 @@
+import { ReadinessStatus } from "../interfaces/ReadinessStatus";
 import KafkaConsumer from "../kafka/KafkaConsumer";
-import SseManager from "../sse/SseManager";
-
-interface ReadinessStatus {
-  checks: {
-    kafkaConsumer: boolean;
-    sseManager: boolean;
-  };
-  ready: boolean;
-}
+import SseManager from "./SseManagerService";
 
 class HealthService {
+  private static readonly kafkaConsumer = KafkaConsumer;
+  private static readonly sseManager = SseManager;
+
   public static getReadiness(): ReadinessStatus {
     const checks = {
-      kafkaConsumer: KafkaConsumer.isReady(),
+      kafkaConsumer: this.kafkaConsumer.isReady(),
       sseManager: true,
     };
 
@@ -23,7 +19,7 @@ class HealthService {
   }
 
   public static getConnectedClientCount(): number {
-    return SseManager.getConnectedClientCount();
+    return this.sseManager.getConnectedClientCount();
   }
 }
 

@@ -1,9 +1,10 @@
 import type { Request, Response } from "express";
-import NotificationController from "../../src/controllers/NotificationController";
+import NotificationController from "../../src/controllers/HealthController";
 import HealthService from "../../src/services/HealthService";
-import SseManager from "../../src/sse/SseManager";
+import SseManager from "../../src/services/SseManagerService";
+import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
 
-jest.mock("../../src/sse/SseManager", () => ({
+jest.mock("../../src/services/SseManagerService", () => ({
   __esModule: true,
   default: {
     addClient: jest.fn(),
@@ -13,10 +14,10 @@ jest.mock("../../src/sse/SseManager", () => ({
 
 function mockResponse(): Response {
   const res = {} as Response;
-  res.status = jest.fn().mockReturnValue(res);
-  res.json = jest.fn().mockReturnValue(res);
-  res.setHeader = jest.fn().mockReturnValue(res);
-  res.write = jest.fn().mockReturnValue(true);
+  res.status = jest.fn().mockReturnValue(res) as unknown as Response["status"];
+  res.json = jest.fn().mockReturnValue(res) as unknown as Response["json"];
+  res.setHeader = jest.fn().mockReturnValue(res) as unknown as Response["setHeader"];
+  res.write = jest.fn().mockReturnValue(true) as unknown as Response["write"];
   return res;
 }
 
@@ -54,7 +55,11 @@ describe("NotificationController", () => {
     });
     jest.spyOn(HealthService, "getConnectedClientCount").mockReturnValue(2);
 
-    NotificationController.readiness({} as Request, res);
+    NotificationController.readiness.call(
+      NotificationController,
+      {} as Request,
+      res,
+    );
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
@@ -78,7 +83,11 @@ describe("NotificationController", () => {
       },
     });
 
-    NotificationController.readiness({} as Request, res);
+    NotificationController.readiness.call(
+      NotificationController,
+      {} as Request,
+      res,
+    );
 
     expect(res.status).toHaveBeenCalledWith(503);
     expect(res.json).toHaveBeenCalledWith(
@@ -97,7 +106,11 @@ describe("NotificationController", () => {
     } as unknown as Request;
     const res = mockResponse();
 
-    NotificationController.subscribeToNotifications(req, res);
+    NotificationController.subscribeToNotifications.call(
+      NotificationController,
+      req,
+      res,
+    );
 
     expect(res.setHeader).toHaveBeenCalledWith(
       "Content-Type",
@@ -106,6 +119,26 @@ describe("NotificationController", () => {
     expect(res.setHeader).toHaveBeenCalledWith("Cache-Control", "no-cache");
     expect(res.setHeader).toHaveBeenCalledWith("Connection", "keep-alive");
     expect(res.write).toHaveBeenCalledWith("event: connected\n");
+    expect(SseManager.addClient).toHaveBeenCalledWith("user-101", res);
+  });
+
+  it("subscribes using the first user id when route params are arrays", () => {
+    const req = {
+      params: {
+        userId: ["user-101", "user-202"],
+      },
+    } as unknown as Request;
+    const res = mockResponse();
+
+    NotificationController.subscribeToNotifications.call(
+      NotificationController,
+      req,
+      res,
+    );
+
+    expect(res.write).toHaveBeenCalledWith(
+      `data: ${JSON.stringify({ userId: "user-101", message: "connected" })}\n\n`,
+    );
     expect(SseManager.addClient).toHaveBeenCalledWith("user-101", res);
   });
 });

@@ -1,6 +1,7 @@
 import KafkaConsumer from "../../src/kafka/KafkaConsumer";
 import HealthService from "../../src/services/HealthService";
-import SseManager from "../../src/sse/SseManager";
+import SseManager from "../../src/services/SseManagerService";
+import { afterEach, describe, expect, it, jest } from "@jest/globals";
 
 describe("HealthService", () => {
   afterEach(() => {

@@ -8,37 +8,32 @@ class NotificationServiceServer {
   private static readonly app = app;
   private static readonly kafkaConsumer = KafkaConsumer;
   private static readonly logger = Logger;
-  private static readonly port = envConfig.port;
+  private static readonly envConfig = envConfig;
+  private static readonly port = this.envConfig.port;
 
   public static async start(): Promise<void> {
-    NotificationServiceServer.logger.info("Starting Notification Service");
+    this.logger.info("Starting Notification Service");
 
-    NotificationServiceServer.listen();
-    await NotificationServiceServer.kafkaConsumer.start();
+    this.listen();
+    await this.kafkaConsumer.start();
 
-    NotificationServiceServer.logger.info("Notification Service started");
+    this.logger.info("Notification Service started");
   }
 
   private static listen(): Server {
-    return NotificationServiceServer.app.listen(
-      NotificationServiceServer.port,
-      () => {
-        NotificationServiceServer.logger.info("HTTP server started", {
-          port: NotificationServiceServer.port,
-          livenessPath: "/health/live",
-          readinessPath: "/health/ready",
-        });
-      },
-    );
+    return this.app.listen(this.port, () => {
+      this.logger.info("HTTP server started", {
+        port: this.port,
+        livenessPath: "/health/live",
+        readinessPath: "/health/ready",
+      });
+    });
   }
 
   public static handleStartupError(error: unknown): never {
-    NotificationServiceServer.logger.error(
-      "Notification Service failed to start",
-      {
-        error: error instanceof Error ? error.message : String(error),
-      },
-    );
+    this.logger.error("Notification Service failed to start", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     process.exit(1);
   }
 }

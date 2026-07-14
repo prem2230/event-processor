@@ -15,11 +15,11 @@ class HealthController {
   }
 
   public static readiness(_req: Request, res: Response): Response {
-    const readiness = HealthController.healthService.getReadiness();
+    const readiness = this.healthService.getReadiness();
     const statusCode = readiness.ready ? 200 : 503;
 
     if (!readiness.ready) {
-      HealthController.logger.warn("Readiness check failed", {
+      this.logger.warn("Readiness check failed", {
         checks: readiness.checks,
       });
     }
