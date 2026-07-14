@@ -12,7 +12,7 @@ class HealthController {
     });
   }
   public static readiness(_req: Request, res: Response): Response {
-    const state = this.healthService.getReadiness();
+    const state = HealthController.healthService.getReadiness();
     return res.status(state.ready ? 200 : 503).json({
       service: "account-service",
       status: state.ready ? "ready" : "not_ready",

@@ -16,7 +16,7 @@ class ServiceClient {
     headers.set("content-type", "application/json");
     headers.set(
       "x-internal-service-token",
-      this.envConfig.internalServiceToken,
+      ServiceClient.envConfig.internalServiceToken,
     );
     if (userId) headers.set("x-authenticated-user-id", userId);
 
@@ -25,7 +25,7 @@ class ServiceClient {
       const response = await fetch(`${baseUrl}${path}`, {
         ...options,
         headers,
-        signal: AbortSignal.timeout(this.envConfig.upstreamTimeoutMs),
+        signal: AbortSignal.timeout(ServiceClient.envConfig.upstreamTimeoutMs),
       });
       const body = (await response.json()) as T;
       this.logger.info("Upstream request completed", {

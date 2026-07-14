@@ -11,7 +11,7 @@ class InternalAuthMiddleware {
     next: NextFunction,
   ): void {
     const supplied = req.header("x-internal-service-token") || "";
-    const expected = this.envConfig.internalServiceToken;
+    const expected = InternalAuthMiddleware.envConfig.internalServiceToken;
     const valid =
       supplied.length === expected.length &&
       timingSafeEqual(Buffer.from(supplied), Buffer.from(expected));
