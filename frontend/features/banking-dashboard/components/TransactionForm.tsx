@@ -44,8 +44,8 @@ export function TransactionForm({
     <form className="transfer-panel" onSubmit={handleSubmit}>
       <div className="section-heading">
         <div>
-          <span className="section-kicker">New transaction</span>
-          <h2>Move funds</h2>
+          <span className="section-kicker">Secure transfer</span>
+          <h2>Send money</h2>
         </div>
         <span className="heading-icon">
           <Send size={19} />
@@ -72,7 +72,7 @@ export function TransactionForm({
       </div>
 
       <label>
-        User ID
+        Recipient ID
         <span className="input-wrap">
           <UserRound size={17} />
           <input
@@ -83,7 +83,7 @@ export function TransactionForm({
       </label>
 
       <label>
-        Account ID
+        From account
         <span className="input-wrap">
           <WalletCards size={17} />
           <input
@@ -108,7 +108,7 @@ export function TransactionForm({
       </label>
 
       <button className="primary-action" disabled={isSubmitting}>
-        <span>{isSubmitting ? "Publishing" : "Publish Event"}</span>
+        <span>{isSubmitting ? "Starting transfer" : "Review transfer"}</span>
         {isSubmitting ? (
           <RefreshCw className="spin" size={18} />
         ) : (

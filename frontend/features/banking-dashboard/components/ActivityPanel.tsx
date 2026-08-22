@@ -2,11 +2,9 @@ import {
   Activity,
   ArrowDownLeft,
   Clock3,
-  Plug,
   ServerCrash,
   X,
 } from "lucide-react";
-import { notificationUrl } from "../config";
 import type {
   ConnectionStatus,
   NotificationEvent,
@@ -19,19 +17,13 @@ interface ActivityPanelProps {
   error: string | null;
   notifications: NotificationEvent[];
   pendingEvents: TransactionResponse[];
-  userId: string;
-  onConnect: () => void;
-  onDisconnect: () => void;
 }
 
 export function ActivityPanel({
   connectionStatus,
   error,
   notifications,
-  onConnect,
-  onDisconnect,
   pendingEvents,
-  userId,
 }: ActivityPanelProps) {
   const isEmpty = notifications.length === 0 && pendingEvents.length === 0;
 
@@ -42,33 +34,12 @@ export function ActivityPanel({
           <span className="section-kicker">Real-time ledger</span>
           <h2>Live activity</h2>
         </div>
-        <div className="stream-actions">
-          {connectionStatus === "connected" ? (
-            <button
-              className="secondary-action"
-              type="button"
-              onClick={onDisconnect}
-            >
-              <X size={16} />
-              Close
-            </button>
-          ) : (
-            <button
-              className="secondary-action connect-action"
-              type="button"
-              onClick={onConnect}
-              disabled={connectionStatus === "connecting"}
-            >
-              <Plug size={16} />
-              {connectionStatus === "connecting" ? "Connecting" : "Connect"}
-            </button>
-          )}
-        </div>
+        <span className={`connection-pill status-${connectionStatus}`}>Live updates</span>
       </div>
 
-      <div className="stream-address">
+      <div className="stream-address" aria-label="Live update status">
         <span className={`stream-indicator status-${connectionStatus}`} />
-        <span>{notificationUrl}/v1/api/events/{userId}</span>
+        <span>Balance and payment updates are connected securely.</span>
       </div>
 
       {error ? (
@@ -80,7 +51,7 @@ export function ActivityPanel({
 
       <div className="event-list">
         {isEmpty ? (
-          <EmptyState onConnect={onConnect} />
+          <EmptyState />
         ) : (
           <>
             {notifications.map((notification) => (
@@ -108,10 +79,11 @@ function NotificationRow({
   notification: NotificationEvent;
 }) {
   const isFailed = notification.data.status === "FAILED";
+  const isPending = ["INITIATED", "PENDING"].includes(notification.data.status);
 
   return (
     <article className="event-row">
-      <span className={`transaction-icon ${isFailed ? "failed" : ""}`}>
+      <span className={`transaction-icon ${isFailed ? "failed" : isPending ? "pending" : ""}`}>
         {isFailed ? <X size={18} /> : <ArrowDownLeft size={18} />}
       </span>
       <div className="event-copy">
@@ -123,9 +95,7 @@ function NotificationRow({
       </div>
       <div className="event-value">
         <strong>{formatCurrency(notification.data.updatedBalance)}</strong>
-        <span
-          className={`event-status ${notification.data.status.toLowerCase()}`}
-        >
+        <span className={`event-status ${isPending ? "pending" : notification.data.status.toLowerCase()}`}>
           {notification.data.status}
         </span>
       </div>
@@ -162,18 +132,14 @@ function PendingTransactionRow({
   );
 }
 
-function EmptyState({ onConnect }: { onConnect: () => void }) {
+function EmptyState() {
   return (
     <div className="empty-state">
       <span className="empty-icon">
         <Activity size={23} />
       </span>
       <strong>No transaction activity</strong>
-      <span>Connect the live stream to receive processed events.</span>
-      <button type="button" onClick={onConnect}>
-        <Plug size={16} />
-        Connect stream
-      </button>
+      <span>Your payment updates will appear here automatically.</span>
     </div>
   );
 }

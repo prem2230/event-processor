@@ -45,6 +45,28 @@ class TransactionProcessor {
         ? currentBalance + transaction.amount
         : currentBalance - transaction.amount;
 
+    if (transaction.type === "DEBIT" && updatedBalance < 0) {
+      await TransactionProcessor.transactionModel.create({
+        transactionId: transaction.transactionId,
+        eventId: event.eventId,
+        userId: transaction.userId,
+        accountId: transaction.accountId,
+        type: transaction.type,
+        amount: transaction.amount,
+        status: "FAILED",
+        processedAt: new Date(),
+      });
+      await TransactionProcessor.kafkaProducer.publishNotificationCreated({
+        userId: transaction.userId,
+        transactionId: transaction.transactionId,
+        accountId: transaction.accountId,
+        status: "FAILED",
+        message: "Transfer declined: insufficient available balance",
+        updatedBalance: currentBalance,
+      });
+      return;
+    }
+
     await TransactionProcessor.transactionModel.create({
       transactionId: transaction.transactionId,
       eventId: event.eventId,

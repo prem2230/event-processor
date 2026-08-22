@@ -12,10 +12,10 @@ import type {
 const maxNotifications = 20;
 const maxPendingEvents = 10;
 
-export function useBankingConsole() {
-  const [userId, setUserId] = useState("user-101");
-  const [accountId, setAccountId] = useState("acc-5001");
-  const [type, setType] = useState<TransactionType>("CREDIT");
+export function useBankingConsole(token: string, authenticatedUserId: string) {
+  const [userId, setUserId] = useState(authenticatedUserId);
+  const [accountId, setAccountId] = useState("");
+  const [type, setType] = useState<TransactionType>("DEBIT");
   const [amount, setAmount] = useState("2500");
   const [connectionStatus, setConnectionStatus] =
     useState<ConnectionStatus>("idle");
@@ -26,7 +26,9 @@ export function useBankingConsole() {
   const eventSourceRef = useRef<EventSource | null>(null);
 
   const latestBalance = useMemo(
-    () => notifications[0]?.data.updatedBalance ?? 0,
+    () =>
+      notifications.find((event) => event.data.status === "COMPLETED")
+        ?.data.updatedBalance ?? 0,
     [notifications]
   );
 
@@ -37,12 +39,13 @@ export function useBankingConsole() {
   }, []);
 
   const connectStream = useCallback(() => {
+    if (!authenticatedUserId) return;
     eventSourceRef.current?.close();
     setConnectionStatus("connecting");
     setLastError(null);
 
     const source = new EventSource(
-      `${notificationUrl}/v1/api/events/${encodeURIComponent(userId)}`
+      `${notificationUrl}/v1/api/events/${encodeURIComponent(authenticatedUserId)}`
     );
 
     source.addEventListener("connected", () => {
@@ -72,21 +75,26 @@ export function useBankingConsole() {
     };
 
     eventSourceRef.current = source;
-  }, [userId]);
+  }, [authenticatedUserId]);
 
   const submitTransaction = useCallback(async () => {
     setIsSubmitting(true);
     setLastError(null);
 
     try {
-      const response = await fetch(`${apiGatewayUrl}/v1/api/transactions`, {
+      if (!token) throw new Error("Your session has expired. Please sign in again.");
+      const response = await fetch(`${apiGatewayUrl}/v1/api/payments`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Idempotency-Key": crypto.randomUUID(),
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
-          userId,
-          accountId,
-          type,
+          sourceAccountId: accountId,
+          destinationAccountId: userId,
           amount: Number(amount),
+          currency: "INR",
         }),
       });
 
@@ -94,20 +102,35 @@ export function useBankingConsole() {
         throw new Error(await response.text());
       }
 
-      const payload = (await response.json()) as TransactionResponse;
-      setPendingEvents((current) =>
-        [payload, ...current].slice(0, maxPendingEvents)
-      );
+      await response.json();
+      // The payment response is intentionally not rendered. The authenticated
+      // SSE stream is the single UI feed for INITIATED/COMPLETED/FAILED states.
     } catch (error) {
       setLastError(error instanceof Error ? error.message : "Request failed");
     } finally {
       setIsSubmitting(false);
     }
-  }, [accountId, amount, type, userId]);
+  }, [accountId, amount, token, userId]);
 
   useEffect(() => {
+    setUserId(authenticatedUserId);
+    if (!token || !authenticatedUserId) return;
+    void (async () => {
+      try {
+        const response = await fetch(`${apiGatewayUrl}/v1/api/accounts`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!response.ok) throw new Error("Could not load your accounts");
+        const accounts = (await response.json()) as Array<{ accountId: string; availableBalance: number }>;
+        if (accounts[0]) setAccountId(accounts[0].accountId);
+        else setLastError("No active account is available for transfers.");
+      } catch (error) {
+        setLastError(error instanceof Error ? error.message : "Could not load your accounts");
+      }
+    })();
+    connectStream();
     return () => eventSourceRef.current?.close();
-  }, []);
+  }, [authenticatedUserId, connectStream, token]);
 
   return {
     accountId,

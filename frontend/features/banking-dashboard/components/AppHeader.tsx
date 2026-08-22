@@ -25,8 +25,8 @@ export function AppHeader({
           <Menu size={21} />
         </button>
         <div>
-          <p>Thursday, 18 June</p>
-          <h1>Banking Event Console</h1>
+          <p>Welcome back, Alex</p>
+          <h1>Everyday banking</h1>
         </div>
       </div>
       <div className="topbar-actions">

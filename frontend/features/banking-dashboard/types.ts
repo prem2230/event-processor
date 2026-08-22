@@ -1,4 +1,5 @@
 export type TransactionType = "CREDIT" | "DEBIT";
+export type BankingView = "dashboard" | "transfer" | "services" | "profile";
 
 export type ConnectionStatus = "idle" | "connecting" | "connected" | "error";
 
@@ -10,7 +11,7 @@ export interface NotificationEvent {
     userId: string;
     transactionId: string;
     accountId: string;
-    status: "COMPLETED" | "FAILED";
+    status: "INITIATED" | "PENDING" | "COMPLETED" | "FAILED";
     message: string;
     updatedBalance: number;
   };

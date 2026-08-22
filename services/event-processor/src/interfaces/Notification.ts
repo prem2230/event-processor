@@ -6,7 +6,7 @@ export interface NotificationCreatedEvent {
     userId: string;
     transactionId: string;
     accountId: string;
-    status: "COMPLETED" | "FAILED";
+    status: "INITIATED" | "PENDING" | "COMPLETED" | "FAILED";
     message: string;
     updatedBalance: number;
   };

@@ -98,6 +98,25 @@ describe("TransactionProcessor", () => {
     );
   });
 
+  it("rejects an overdraft without changing the balance", async () => {
+    jest.mocked(TransactionModel.findByTransactionId).mockResolvedValue(null);
+    jest.mocked(RedisService.get).mockResolvedValue("400");
+    jest.mocked(TransactionModel.create).mockResolvedValue({} as never);
+    jest.mocked(KafkaProducer.publishNotificationCreated).mockResolvedValue(undefined);
+
+    await TransactionProcessor.process({
+      ...transactionEvent,
+      data: { ...transactionEvent.data, type: "DEBIT", amount: 500 },
+    });
+
+    expect(RedisService.set).not.toHaveBeenCalled();
+    expect(TransactionModel.create).toHaveBeenCalledWith(expect.objectContaining({ status: "FAILED" }));
+    expect(KafkaProducer.publishNotificationCreated).toHaveBeenCalledWith(expect.objectContaining({
+      status: "FAILED",
+      updatedBalance: 400,
+    }));
+  });
+
   it("ignores duplicate transactions", async () => {
     jest
       .mocked(TransactionModel.findByTransactionId)

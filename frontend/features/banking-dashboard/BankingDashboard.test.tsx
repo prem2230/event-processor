@@ -61,6 +61,18 @@ const notificationEvent = {
 describe("BankingDashboard", () => {
   beforeEach(() => {
     MockEventSource.instances = [];
+    window.localStorage.setItem(
+      "pulsebank.session",
+      JSON.stringify({
+        accessToken: "test-token",
+        user: {
+          userId: "user-101",
+          firstName: "Alex",
+          lastName: "Parker",
+          email: "alex@example.com",
+        },
+      })
+    );
     global.EventSource = MockEventSource as unknown as typeof EventSource;
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
@@ -72,12 +84,12 @@ describe("BankingDashboard", () => {
     render(<BankingDashboard />);
 
     expect(
-      screen.getByRole("heading", { name: "Banking Event Console" })
+      screen.getByRole("heading", { name: "Everyday banking" })
     ).toBeInTheDocument();
-    expect(screen.getByLabelText("User ID")).toHaveValue("user-101");
-    expect(screen.getByLabelText("Account ID")).toHaveValue("acc-5001");
+    expect(screen.getByLabelText("Recipient ID")).toHaveValue("user-101");
+    expect(screen.getByLabelText("From account")).toHaveValue("acc-5001");
     expect(
-      screen.getByRole("button", { name: "Publish Event" })
+      screen.getByRole("button", { name: "Review transfer" })
     ).toBeInTheDocument();
   });
 
@@ -105,18 +117,18 @@ describe("BankingDashboard", () => {
     const user = userEvent.setup();
     render(<BankingDashboard />);
 
-    await user.click(screen.getByRole("button", { name: "Publish Event" }));
+    await user.click(screen.getByRole("button", { name: "Review transfer" }));
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
-        "http://localhost:3000/v1/api/transactions",
+        "http://localhost:3000/v1/api/payments",
         expect.objectContaining({
           method: "POST",
           body: JSON.stringify({
-            userId: "user-101",
-            accountId: "acc-5001",
-            type: "CREDIT",
+            sourceAccountId: "acc-5001",
+            destinationAccountId: "user-101",
             amount: 2500,
+            currency: "INR",
           }),
         })
       );

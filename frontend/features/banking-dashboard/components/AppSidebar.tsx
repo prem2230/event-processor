@@ -9,16 +9,21 @@ import {
   X,
   Zap,
 } from "lucide-react";
+import type { BankingView } from "../types";
 
 interface AppSidebarProps {
   isOpen: boolean;
   transactionCount: number;
+  activeView: BankingView;
+  onNavigate: (view: BankingView) => void;
   onClose: () => void;
 }
 
 export function AppSidebar({
   isOpen,
   transactionCount,
+  activeView,
+  onNavigate,
   onClose,
 }: AppSidebarProps) {
   return (
@@ -41,28 +46,28 @@ export function AppSidebar({
 
         <nav aria-label="Main navigation">
           <p className="nav-label">Workspace</p>
-          <a className="nav-item active" href="#overview">
+          <button className={`nav-item ${activeView === "dashboard" ? "active" : ""}`} type="button" onClick={() => onNavigate("dashboard")}>
             <LayoutDashboard size={18} />
             Overview
-          </a>
-          <a className="nav-item" href="#transactions">
+          </button>
+          <button className={`nav-item ${activeView === "transfer" ? "active" : ""}`} type="button" onClick={() => onNavigate("transfer")}>
             <ReceiptText size={18} />
-            Transactions
+            Transfer
             <span className="nav-count">{transactionCount}</span>
-          </a>
-          <a className="nav-item" href="#accounts">
+          </button>
+          <button className="nav-item" type="button" onClick={() => onNavigate("dashboard")}>
             <WalletCards size={18} />
             Accounts
-          </a>
-          <a className="nav-item" href="#cards">
+          </button>
+          <button className={`nav-item ${activeView === "services" ? "active" : ""}`} type="button" onClick={() => onNavigate("services")}>
             <CreditCard size={18} />
-            Cards
-          </a>
+            Services
+          </button>
           <p className="nav-label nav-label-secondary">Manage</p>
-          <a className="nav-item" href="#settings">
+          <button className={`nav-item ${activeView === "profile" ? "active" : ""}`} type="button" onClick={() => onNavigate("profile")}>
             <Settings size={18} />
-            Settings
-          </a>
+            Profile & settings
+          </button>
         </nav>
 
         <div className="sidebar-footer">
@@ -73,7 +78,7 @@ export function AppSidebar({
               <span>256-bit encrypted</span>
             </div>
           </div>
-          <button className="profile-row" type="button">
+          <button className="profile-row" type="button" onClick={() => onNavigate("profile")}>
             <span className="avatar">AP</span>
             <span>
               <strong>Alex Parker</strong>
