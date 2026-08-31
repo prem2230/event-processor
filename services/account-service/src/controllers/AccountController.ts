@@ -51,6 +51,12 @@ class AccountController {
   ): Promise<Response> => {
     try {
       const userId = req.header("x-authenticated-user-id") || "";
+      console.log({
+        message: "Applying balance mutation",
+        userId,
+        accountId: req.params.accountId,
+        requestBody: req.body,
+      });
       return res.status(202).json(
         await this.accountService.applyBalanceMutation(userId, String(req.params.accountId || ""), req.body),
       );

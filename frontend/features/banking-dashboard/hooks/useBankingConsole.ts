@@ -24,12 +24,13 @@ export function useBankingConsole(token: string, authenticatedUserId: string) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [lastError, setLastError] = useState<string | null>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
+  const [balance, setBalance] = useState(0);
 
   const latestBalance = useMemo(
     () =>
       notifications.find((event) => event.data.status === "COMPLETED")
-        ?.data.updatedBalance ?? 0,
-    [notifications]
+        ?.data.updatedBalance ?? balance,
+    [notifications, balance]
   );
 
   const disconnectStream = useCallback(() => {
@@ -122,7 +123,13 @@ export function useBankingConsole(token: string, authenticatedUserId: string) {
         });
         if (!response.ok) throw new Error("Could not load your accounts");
         const accounts = (await response.json()) as Array<{ accountId: string; availableBalance: number }>;
-        if (accounts[0]) setAccountId(accounts[0].accountId);
+        if (accounts.length > 0) {
+          let availableAccount = accounts.find((account) => account.availableBalance > 0);
+          if (!availableAccount) availableAccount = accounts[0];
+          setAccountId(availableAccount.accountId);
+          setBalance(availableAccount.availableBalance);
+          return;
+        }
         else setLastError("No active account is available for transfers.");
       } catch (error) {
         setLastError(error instanceof Error ? error.message : "Could not load your accounts");

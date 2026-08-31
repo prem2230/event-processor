@@ -5,6 +5,7 @@ import { PaymentModel, type PaymentDocument, type PaymentStatus } from "../model
 import Logger from "../utils/logger";
 
 export interface CreatePaymentRequest { sourceAccountId: string; destinationAccountId?: string; amount: number; currency?: string; }
+interface BalanceMutationResponse { account: { availableBalance: number }; alreadyApplied: boolean; }
 const producer = new Kafka({ clientId: "payment-service", brokers: [config.kafkaBroker] }).producer();
 let connected = false;
 
@@ -19,9 +20,10 @@ export class PaymentService {
     try {
       const response = await fetch(`${config.accountServiceUrl}/internal/accounts/${encodeURIComponent(payment.sourceAccountId)}/balance-mutations`, { method: "POST", headers: { "content-type": "application/json", "x-internal-service-token": config.internalToken, "x-authenticated-user-id": userId }, body: JSON.stringify({ paymentId: payment.paymentId, type: "DEBIT", amount: payment.amount }) });
       if (!response.ok) throw new Error(response.status === 409 ? "INSUFFICIENT_AVAILABLE_BALANCE" : "ACCOUNT_MUTATION_REJECTED");
+      const mutation = await response.json() as BalanceMutationResponse;
       const completed = await PaymentModel.complete(payment.paymentId);
       if (!completed) throw new Error("PAYMENT_STATE_CONFLICT");
-      await this.publish(completed, "COMPLETED");
+      await this.publish(completed, "COMPLETED", mutation.account.availableBalance);
       Logger.info("Payment completed", { paymentId: completed.paymentId });
       return completed;
     } catch (error) {
@@ -32,8 +34,8 @@ export class PaymentService {
       return failed;
     }
   }
-  private static async publish(payment: PaymentDocument, status: PaymentStatus): Promise<void> {
+  private static async publish(payment: PaymentDocument, status: PaymentStatus, updatedBalance = 0): Promise<void> {
     if (!connected) { await producer.connect(); connected = true; }
-    await producer.send({ topic: config.notificationTopic, messages: [{ key: payment.userId, value: JSON.stringify({ eventId: randomUUID(), eventType: "notification.created", occurredAt: new Date().toISOString(), data: { userId: payment.userId, transactionId: payment.paymentId, accountId: payment.sourceAccountId, status, message: status === "INITIATED" ? "Transfer initiated" : status === "COMPLETED" ? "Transfer completed" : "Transfer failed", updatedBalance: 0 } }) }] });
+    await producer.send({ topic: config.notificationTopic, messages: [{ key: payment.userId, value: JSON.stringify({ eventId: randomUUID(), eventType: "notification.created", occurredAt: new Date().toISOString(), data: { userId: payment.userId, transactionId: payment.paymentId, accountId: payment.sourceAccountId, status, message: status === "INITIATED" ? "Transfer initiated" : status === "COMPLETED" ? "Transfer completed" : "Transfer failed", updatedBalance } }) }] });
   }
 }
